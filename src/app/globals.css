@@ -1,19 +1,60 @@
+@import "@fontsource-variable/vazirmatn/index.css";
 @import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--avelia-background);
+  --color-foreground: var(--avelia-foreground);
+  --color-surface: var(--avelia-surface);
+  --color-surface-strong: var(--avelia-surface-strong);
+  --color-muted: var(--avelia-muted);
+  --color-muted-foreground: var(--avelia-muted-foreground);
+  --color-border: var(--avelia-border);
+  --color-primary: var(--avelia-primary);
+  --color-primary-foreground: var(--avelia-primary-foreground);
+  --color-accent: var(--avelia-accent);
+  --color-accent-soft: var(--avelia-accent-soft);
+  --color-accent-foreground: var(--avelia-accent-foreground);
+  --color-danger: var(--avelia-danger);
+  --font-sans: "Vazirmatn Variable", Tahoma, Arial, sans-serif;
+  --font-display: "Vazirmatn Variable", Tahoma, Arial, sans-serif;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --shadow-soft: 0 1.5rem 4rem rgb(17 17 15 / 7%);
+  --shadow-lifted: 0 2rem 5rem rgb(17 17 15 / 12%);
+  --ease-avelia: cubic-bezier(0.22, 1, 0.36, 1);
+}
 
 :root {
   color-scheme: light;
-  background: #ffffff;
-  color: #111111;
+  --avelia-background: #f7f4ee;
+  --avelia-foreground: #151512;
+  --avelia-surface: #fffdf9;
+  --avelia-surface-strong: #eee9df;
+  --avelia-muted: #e8e2d7;
+  --avelia-muted-foreground: #69655d;
+  --avelia-border: #d9d2c5;
+  --avelia-primary: #121210;
+  --avelia-primary-foreground: #fffdf9;
+  --avelia-accent: #b99a61;
+  --avelia-accent-soft: #e9dec8;
+  --avelia-accent-foreground: #4b3a1e;
+  --avelia-danger: #9f342c;
+  background: var(--avelia-background);
+  color: var(--avelia-foreground);
   font-synthesis: none;
 }
 
 * {
   box-sizing: border-box;
+  border-color: var(--avelia-border);
 }
 
 html {
   min-width: 320px;
   scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -21,6 +62,11 @@ body {
   margin: 0;
   background: inherit;
   color: inherit;
+  font-family: "Vazirmatn Variable", Tahoma, Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
@@ -28,4 +74,95 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--avelia-accent-soft);
+  color: var(--avelia-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--avelia-accent);
+  outline-offset: 3px;
+}
+
+@keyframes avelia-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes avelia-content-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -47%) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes avelia-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes avelia-shimmer {
+  0% {
+    transform: translateX(110%);
+  }
+  100% {
+    transform: translateX(-110%);
+  }
+}
+
+.avelia-dialog-overlay[data-state="open"] {
+  animation: avelia-overlay-in 400ms var(--ease-avelia);
+}
+
+.avelia-dialog-content[data-state="open"] {
+  animation: avelia-content-in 500ms var(--ease-avelia);
+}
+
+.avelia-sheet-content[data-state="open"] {
+  animation: avelia-sheet-in 500ms var(--ease-avelia);
+}
+
+.avelia-skeleton::after {
+  animation: avelia-shimmer 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

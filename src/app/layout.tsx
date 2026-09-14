@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#f7f4ee",
 };
 
 type RootLayoutProps = Readonly<{
@@ -25,7 +25,9 @@ type RootLayoutProps = Readonly<{
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang={documentLocale.language} dir={documentLocale.direction}>
-      <body>{children}</body>
+      <body className="bg-background text-foreground min-h-screen antialiased">
+        {children}
+      </body>
     </html>
   );
 }

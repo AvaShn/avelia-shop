@@ -6,6 +6,26 @@ test("serves a Persian right-to-left document", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("lang", "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
-    page.getByRole("heading", { name: "پایه‌ی فنی AVELIA آماده است." }),
+    page.getByRole("heading", {
+      name: "جزئیات، زبان مشترک تجربه‌ی AVELIA است.",
+    }),
   ).toBeVisible();
+
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(viewport?.width ?? 0);
+});
+
+test("opens the search experience with accessible Persian content", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "جست‌وجو" }).click();
+
+  await expect(
+    page.getByRole("dialog", { name: "جست‌وجو در مجموعه" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("عبارت جست‌وجو")).toBeFocused();
 });
