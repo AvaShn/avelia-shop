@@ -17,7 +17,8 @@ import {
 
 const mobileNavigation = [
   { label: "صفحه اصلی", href: "/" },
-  { label: "مجموعه محصولات", href: "/products" },
+  { label: "مجموعه‌ها", href: "/#collections" },
+  { label: "انتخاب‌های ویژه", href: "/#featured-products" },
   { label: "داستان AVELIA", href: "/#brand-story" },
   { label: "ارتباط با ما", href: "/contact" },
 ] as const;

@@ -19,4 +19,4 @@ AVELIA is a mobile-first Persian RTL ecommerce experience built with Next.js 15.
 
 ## Delivery status
 
-Phase 1 establishes the application foundation. Phase 2 adds AVELIA's design tokens, Persian typography, shared storefront shell, motion rules, and reusable UI primitives. The complete homepage begins in Phase 3.
+Phase 1 establishes the application foundation. Phase 2 adds AVELIA's design system and shared UI primitives. Phase 3 delivers the complete premium homepage with original editorial imagery, category storytelling, featured-product previews, brand story, and trust content. The verified catalog and product routes begin in Phase 4.

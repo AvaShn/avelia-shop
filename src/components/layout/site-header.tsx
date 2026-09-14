@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 
 const navigation = [
   { label: "صفحه اصلی", href: "/" },
-  { label: "مجموعه محصولات", href: "/products" },
+  { label: "مجموعه‌ها", href: "/#collections" },
+  { label: "انتخاب‌های ویژه", href: "/#featured-products" },
   { label: "داستان برند", href: "/#brand-story" },
 ] as const;
 

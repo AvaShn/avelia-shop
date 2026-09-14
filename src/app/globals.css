@@ -86,6 +86,10 @@ a {
   text-decoration: none;
 }
 
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
 ::selection {
   background: var(--avelia-accent-soft);
   color: var(--avelia-primary);
