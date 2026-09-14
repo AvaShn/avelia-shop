@@ -1,0 +1,44 @@
+# dependencies
+/node_modules
+
+# Next.js
+/.next
+/out
+
+# production
+/build
+
+# testing
+/coverage
+/playwright-report
+/test-results
+
+# local tooling
+/.npm-cache
+/.sites-runtime
+
+# local project specification package
+/Avelia_Codex_Complete_Project_Package/
+/Avelia_Codex_Complete_Project_Package.zip
+
+# environment files
+.env*
+!.env.example
+
+# local editor and OS files
+.DS_Store
+Thumbs.db
+*.pem
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
