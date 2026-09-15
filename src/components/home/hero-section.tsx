@@ -11,8 +11,8 @@ export function HeroSection() {
     <section className="border-border/70 relative isolate border-b lg:min-h-[calc(100svh-5rem)] lg:overflow-hidden">
       <div className="border-border/70 relative aspect-[4/3] overflow-hidden border-b sm:aspect-[16/8] lg:absolute lg:inset-0 lg:aspect-auto lg:border-0">
         <Image
-          src="/images/home/avelia-hero.webp"
-          alt="مجموعه‌ای مینیمال از عطر، محصول مراقبتی و ابریشم مشکی در نور گرم"
+          src="/images/home/avelia-beauty-hero-v2.webp"
+          alt="مجموعه‌ای مینیمال از لوازم آرایشی، محصول مراقبت پوست و عطر در نور گرم"
           fill
           priority
           sizes="100vw"
@@ -38,12 +38,12 @@ export function HeroSection() {
             انتخاب‌هایی برای کسانی که به جزئیات اهمیت می‌دهند.
           </h1>
           <p className="text-muted-foreground mt-7 max-w-xl text-base leading-8 sm:text-lg sm:leading-9">
-            مجموعه‌ای سنجیده از محصولات اصیل؛ برای تجربه‌ای که کیفیت را نه در
-            هیاهو، بلکه در هر جزئیات معنا می‌کند.
+            مجموعه‌ای سنجیده از لوازم آرایشی، مراقبت پوست و عطرهای اصیل؛ برای
+            تجربه‌ای که زیبایی را با کیفیت و انتخاب آگاهانه معنا می‌کند.
           </p>
           <Button size="lg" asChild className="mt-9">
             <Link href="#featured-products">
-              کشف مجموعه
+              کشف دنیای زیبایی
               <ArrowDownLeft aria-hidden="true" />
             </Link>
           </Button>

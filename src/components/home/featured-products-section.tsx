@@ -5,9 +5,14 @@ import { SectionHeading } from "@/components/home/section-heading";
 import { Container } from "@/components/layout/container";
 import { Reveal } from "@/components/motion/reveal";
 import { ProductCard } from "@/components/product/product-card";
-import { featuredProducts } from "@/features/home/content";
+import {
+  getFeaturedProducts,
+  toProductCardData,
+} from "@/features/products/queries";
 
 export function FeaturedProductsSection() {
+  const featuredProducts = getFeaturedProducts().map(toProductCardData);
+
   return (
     <section
       id="featured-products"
@@ -18,8 +23,8 @@ export function FeaturedProductsSection() {
           <div className="flex items-end justify-between gap-8">
             <SectionHeading
               eyebrow="انتخاب‌های این فصل"
-              title="محصولاتی که ارزش ماندن دارند"
-              description="هر محصول با توجه به کیفیت، اصالت و تجربه‌ای که می‌سازد وارد این مجموعه شده است."
+              title="منتخب‌های زیبایی AVELIA"
+              description="از آرایش تا مراقبت و رایحه؛ هر محصول با توجه به کیفیت، اصالت و تجربه‌ی استفاده انتخاب شده است."
             />
             <Link
               href="/products"

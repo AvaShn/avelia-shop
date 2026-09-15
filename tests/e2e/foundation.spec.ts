@@ -35,9 +35,32 @@ test("renders every required homepage section", async ({ page }) => {
 
   await expect(page.locator("#collections")).toBeVisible();
   await expect(page.locator("#featured-products")).toBeVisible();
+  await expect(page.locator("#offers")).toBeVisible();
   await expect(page.locator("#brand-story")).toBeVisible();
   await expect(page.locator("#trust")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "لوازم آرایشی" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("کرم‌پودر Super Stay Lumi-Matte شماره ۱۱۹").first(),
+  ).toBeVisible();
   await expect(page.getByText("تضمین اصالت").first()).toBeVisible();
+});
+
+test("keeps primary link buttons readable", async ({ page }) => {
+  await page.goto("/");
+
+  const primaryLink = page.getByRole("link", { name: "کشف دنیای زیبایی" });
+  const colors = await primaryLink.evaluate((element) => {
+    const styles = window.getComputedStyle(element);
+    return {
+      background: styles.backgroundColor,
+      text: styles.color,
+    };
+  });
+
+  expect(colors.background).toBe("rgb(18, 18, 16)");
+  expect(colors.text).toBe("rgb(255, 253, 249)");
 });
 
 test("shows a clear preview message for cart actions", async ({ page }) => {
@@ -47,7 +70,5 @@ test("shows a clear preview message for cart actions", async ({ page }) => {
     .first()
     .click();
 
-  await expect(
-    page.getByText("انتخاب محصول در مرحله‌ی بعد فعال می‌شود"),
-  ).toBeVisible();
+  await expect(page.getByText("سبد خرید در فاز ۶ فعال می‌شود")).toBeVisible();
 });

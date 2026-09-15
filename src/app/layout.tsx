@@ -5,11 +5,15 @@ import { documentLocale } from "@/lib/i18n/config";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  ),
   title: {
     default: "AVELIA",
     template: "%s | AVELIA",
   },
-  description: "تجربه‌ای متفاوت برای انتخاب محصولات اصیل و باکیفیت",
+  description:
+    "فروشگاه آنلاین لوازم آرایشی، محصولات مراقبت پوست و عطرهای اصیل و باکیفیت",
 };
 
 export const viewport: Viewport = {

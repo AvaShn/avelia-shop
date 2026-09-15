@@ -18,8 +18,8 @@ export function SiteFooter() {
           <div className="max-w-xl">
             <BrandMark className="text-white" />
             <p className="mt-6 leading-8 text-white/60">
-              مجموعه‌ای انتخاب‌شده برای کسانی که به اصالت، کیفیت و جزئیات اهمیت
-              می‌دهند.
+              انتخابی سنجیده از لوازم آرایشی، محصولات مراقبت پوست و عطرهای اصیل
+              برای کسانی که به کیفیت و جزئیات اهمیت می‌دهند.
             </p>
           </div>
           <nav aria-label="پیوندهای پایانی">

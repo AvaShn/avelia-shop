@@ -16,12 +16,12 @@ export function CategoriesSection() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeading
               eyebrow="مجموعه‌ها"
-              title="هر انتخاب، بخشی از یک سبک زندگی"
-              description="مجموعه‌هایی محدود و هدفمند؛ بدون شلوغی و بدون انتخاب‌های تصادفی."
+              title="هر انتخاب، بخشی از آیین زیبایی شما"
+              description="آرایش، مراقبت پوست و عطر؛ سه مجموعه‌ی دقیق برای انتخابی مطمئن‌تر."
             />
             <p className="text-muted-foreground max-w-sm text-sm leading-7 lg:text-end">
-              هر دسته‌بندی با نگاه دقیق به کیفیت، کاربرد و تجربه‌ی واقعی انتخاب
-              شده است.
+              هر محصول با نگاه دقیق به اصالت، کیفیت، کاربرد و تجربه‌ی واقعی
+              انتخاب شده است.
             </p>
           </div>
 

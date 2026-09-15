@@ -28,25 +28,30 @@ export function SearchDialog() {
             نام محصول، برند یا دسته‌بندی موردنظر خود را وارد کنید.
           </DialogDescription>
         </DialogHeader>
-        <label htmlFor="site-search" className="sr-only">
-          عبارت جست‌وجو
-        </label>
-        <div className="relative">
-          <Search
-            aria-hidden="true"
-            className="text-muted-foreground pointer-events-none absolute start-4 top-1/2 size-5 -translate-y-1/2"
-          />
-          <Input
-            id="site-search"
-            type="search"
-            placeholder="برای مثال: عطر، مراقبت پوست..."
-            className="ps-12"
-            autoComplete="off"
-          />
-        </div>
-        <p className="text-muted-foreground text-sm leading-7">
-          جست‌وجوی محصولات در فاز فروشگاه فعال خواهد شد.
-        </p>
+        <form action="/products" method="get" className="space-y-4">
+          <label htmlFor="site-search" className="sr-only">
+            عبارت جست‌وجو
+          </label>
+          <div className="relative">
+            <Search
+              aria-hidden="true"
+              className="text-muted-foreground pointer-events-none absolute start-4 top-1/2 size-5 -translate-y-1/2"
+            />
+            <Input
+              id="site-search"
+              name="q"
+              type="search"
+              placeholder="برای مثال: رژ لب، سرم پوست، عطر..."
+              className="ps-12"
+              autoComplete="off"
+              maxLength={80}
+            />
+          </div>
+          <Button type="submit" className="w-full">
+            مشاهده نتیجه‌ها
+            <Search aria-hidden="true" />
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   );

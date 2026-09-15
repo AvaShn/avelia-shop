@@ -7,23 +7,28 @@ import { Button } from "@/components/ui/button";
 
 type PreviewAddToSelectionProps = {
   productName: string;
+  isAvailable?: boolean;
+  className?: string;
 };
 
 export function PreviewAddToSelection({
   productName,
+  isAvailable = true,
+  className,
 }: PreviewAddToSelectionProps) {
   return (
     <Button
       variant="outline"
-      className="mt-5 w-full"
+      className={className ?? "mt-5 w-full"}
+      disabled={!isAvailable}
       onClick={() =>
-        toast("انتخاب محصول در مرحله‌ی بعد فعال می‌شود", {
-          description: `${productName} پس از اتصال کاتالوگ قابل انتخاب خواهد بود.`,
+        toast("سبد خرید در فاز ۶ فعال می‌شود", {
+          description: `${productName} اکنون در کاتالوگ قابل مشاهده است.`,
         })
       }
     >
-      افزودن به انتخاب‌ها
-      <Plus aria-hidden="true" />
+      {isAvailable ? "افزودن به انتخاب‌ها" : "موقتاً ناموجود"}
+      {isAvailable ? <Plus aria-hidden="true" /> : null}
     </Button>
   );
 }

@@ -2,19 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { PreviewAddToSelection } from "@/components/product/preview-add-to-selection";
+import type { ProductCardData } from "@/features/products/types";
+import { formatPersianInteger } from "@/lib/i18n/format-number";
+import { getDiscountPercentage } from "@/lib/pricing/discount";
 import { formatPriceRial } from "@/lib/pricing/format-price";
-
-export type ProductCardData = {
-  id: string;
-  slug: string;
-  name: string;
-  brand: string;
-  shortDescription: string;
-  priceRial: number;
-  image: string;
-  imageAlt: string;
-  isOriginal: boolean;
-};
 
 type ProductCardProps = {
   product: ProductCardData;
@@ -23,6 +14,14 @@ type ProductCardProps = {
 
 export function ProductCard({ product, priority = false }: ProductCardProps) {
   const price = formatPriceRial(product.priceRial);
+  const discountPercentage = getDiscountPercentage(
+    product.priceRial,
+    product.compareAtPriceRial,
+  );
+  const compareAtPrice =
+    discountPercentage > 0 && product.compareAtPriceRial
+      ? formatPriceRial(product.compareAtPriceRial)
+      : null;
 
   return (
     <article className="group min-w-0 snap-start">
@@ -42,6 +41,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         {product.isOriginal ? (
           <span className="bg-surface/90 text-foreground absolute top-4 right-4 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-md">
             تضمین اصالت
+          </span>
+        ) : null}
+        {discountPercentage > 0 ? (
+          <span className="absolute top-4 left-4 rounded-full bg-[#7a3045] px-3 py-1.5 text-xs font-medium text-white shadow-sm">
+            ٪{formatPersianInteger(discountPercentage)} تخفیف
           </span>
         ) : null}
       </Link>
@@ -64,6 +68,14 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         </p>
 
         <div className="border-border/70 mt-4 border-t pt-4">
+          {compareAtPrice ? (
+            <p
+              className="text-muted-foreground mb-1 text-xs line-through decoration-1"
+              dir="rtl"
+            >
+              {compareAtPrice.rial}
+            </p>
+          ) : null}
           <p className="font-medium" dir="rtl">
             {price.rial}
           </p>
@@ -72,7 +84,15 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           </p>
         </div>
 
-        <PreviewAddToSelection productName={product.name} />
+        <PreviewAddToSelection
+          productName={product.name}
+          isAvailable={product.stock > 0}
+        />
+        {product.stock === 0 ? (
+          <p className="text-muted-foreground mt-3 text-center text-xs">
+            این محصول موقتاً ناموجود است.
+          </p>
+        ) : null}
       </div>
     </article>
   );

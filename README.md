@@ -1,6 +1,7 @@
 # AVELIA
 
-AVELIA is a mobile-first Persian RTL ecommerce experience built with Next.js 15.
+AVELIA is a mobile-first Persian RTL beauty ecommerce experience for makeup,
+skincare, and fragrance, built with Next.js 15.
 
 ## Local development
 
@@ -19,4 +20,9 @@ AVELIA is a mobile-first Persian RTL ecommerce experience built with Next.js 15.
 
 ## Delivery status
 
-Phase 1 establishes the application foundation. Phase 2 adds AVELIA's design system and shared UI primitives. Phase 3 delivers the complete premium homepage with original editorial imagery, category storytelling, featured-product previews, brand story, and trust content. The verified catalog and product routes begin in Phase 4.
+Phase 1 establishes the application foundation. Phase 2 adds AVELIA's design
+system and shared UI primitives. Phase 3 delivers the complete premium beauty
+homepage. Phase 4 adds a typed 28-item cosmetics catalog (including the 19
+provided product assets), search, category and discount filters, sorting,
+discount pricing, product galleries, detailed product pages, related products,
+metadata, structured data, and a sitemap. Prisma persistence begins in Phase 5.
