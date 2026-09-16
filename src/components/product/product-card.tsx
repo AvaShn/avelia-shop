@@ -24,7 +24,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       : null;
 
   return (
-    <article className="group min-w-0 snap-start">
+    <article className="group flex h-full min-w-0 snap-start flex-col">
       <Link
         href={`/products/${product.slug}`}
         className="bg-background relative block aspect-square overflow-hidden rounded-lg focus-visible:outline-offset-4"
@@ -35,7 +35,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           alt={product.imageAlt}
           fill
           priority={priority}
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 45vw, 84vw"
+          sizes="(min-width: 1024px) 23vw, (min-width: 640px) 42vw, 78vw"
           className="object-cover transition-transform duration-700 ease-[var(--ease-avelia)] group-hover:scale-[1.035]"
         />
         {product.isOriginal ? (
@@ -50,36 +50,38 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         ) : null}
       </Link>
 
-      <div className="pt-5">
+      <div className="flex flex-1 flex-col pt-4">
         <p
           dir="ltr"
-          className="text-accent text-xs font-medium tracking-[0.12em]"
+          className="text-accent line-clamp-1 min-h-5 text-xs font-medium tracking-[0.12em]"
         >
           {product.brand}
         </p>
         <Link
           href={`/products/${product.slug}`}
-          className="hover:text-accent mt-2 block text-lg font-semibold transition-colors duration-500"
+          className="hover:text-accent mt-1.5 line-clamp-2 min-h-14 text-base leading-7 font-semibold transition-colors duration-500"
         >
           {product.name}
         </Link>
-        <p className="text-muted-foreground mt-2 min-h-14 text-sm leading-7">
+        <p className="text-muted-foreground mt-1.5 line-clamp-2 min-h-14 text-sm leading-7">
           {product.shortDescription}
         </p>
 
-        <div className="border-border/70 mt-4 border-t pt-4">
-          {compareAtPrice ? (
-            <p
-              className="text-muted-foreground mb-1 text-xs line-through decoration-1"
-              dir="rtl"
-            >
-              {compareAtPrice.rial}
-            </p>
-          ) : null}
+        <div className="border-border/70 mt-auto border-t pt-3">
+          <div className="mb-1 min-h-5">
+            {compareAtPrice ? (
+              <p
+                className="text-muted-foreground text-xs leading-5 line-through decoration-1"
+                dir="rtl"
+              >
+                {compareAtPrice.rial}
+              </p>
+            ) : null}
+          </div>
           <p className="font-medium" dir="rtl">
             {price.rial}
           </p>
-          <p className="text-muted-foreground mt-1 min-h-6 text-xs leading-6">
+          <p className="text-muted-foreground mt-1 line-clamp-2 min-h-12 text-xs leading-6">
             {price.tomanWords}
           </p>
         </div>
@@ -88,11 +90,14 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           productName={product.name}
           isAvailable={product.stock > 0}
         />
-        {product.stock === 0 ? (
-          <p className="text-muted-foreground mt-3 text-center text-xs">
-            این محصول موقتاً ناموجود است.
-          </p>
-        ) : null}
+        <p
+          className={`text-muted-foreground mt-2 min-h-5 text-center text-xs ${
+            product.stock > 0 ? "invisible" : ""
+          }`}
+          aria-hidden={product.stock > 0 ? "true" : undefined}
+        >
+          این محصول موقتاً ناموجود است.
+        </p>
       </div>
     </article>
   );

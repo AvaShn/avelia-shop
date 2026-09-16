@@ -1,5 +1,7 @@
 .next
 node_modules
+.pnpm-store
+pnpm-lock.yaml
 coverage
 playwright-report
 test-results

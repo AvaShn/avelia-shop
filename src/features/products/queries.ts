@@ -74,11 +74,14 @@ export function toProductCardData(product: Product): ProductCardData {
   };
 }
 
-export function getCatalogProducts(query: CatalogQuery = {}) {
+export function queryProductCollection(
+  collection: readonly Product[],
+  query: CatalogQuery = {},
+) {
   const normalized = normalizeCatalogQuery(query);
   const search = normalized.q;
 
-  const filtered = products.filter((product) => {
+  const filtered = collection.filter((product) => {
     if (normalized.category && product.categoryId !== normalized.category) {
       return false;
     }
@@ -122,6 +125,10 @@ export function getCatalogProducts(query: CatalogQuery = {}) {
   });
 }
 
+export function getCatalogProducts(query: CatalogQuery = {}) {
+  return queryProductCollection(products, query);
+}
+
 export function getProductBySlug(slug: string) {
   return products.find((product) => product.slug === slug);
 }
@@ -131,14 +138,28 @@ export function getProductCategory(categoryId: ProductCategoryId) {
 }
 
 export function getFeaturedProducts(limit = 4) {
-  return products
+  return getFeaturedProductsFromCollection(products, limit);
+}
+
+export function getFeaturedProductsFromCollection(
+  collection: readonly Product[],
+  limit = 4,
+) {
+  return collection
     .filter((product) => product.isFeatured && product.stock > 0)
     .sort((first, second) => first.sortOrder - second.sortOrder)
     .slice(0, limit);
 }
 
 export function getDiscountedProducts(limit = 4) {
-  return products
+  return getDiscountedProductsFromCollection(products, limit);
+}
+
+export function getDiscountedProductsFromCollection(
+  collection: readonly Product[],
+  limit = 4,
+) {
+  return collection
     .filter(
       (product) =>
         product.stock > 0 &&
@@ -149,16 +170,24 @@ export function getDiscountedProducts(limit = 4) {
 }
 
 export function getRelatedProducts(product: Product, limit = 4) {
+  return getRelatedProductsFromCollection(products, product, limit);
+}
+
+export function getRelatedProductsFromCollection(
+  collection: readonly Product[],
+  product: Product,
+  limit = 4,
+) {
   const byCuratedOrder = (first: Product, second: Product) =>
     first.sortOrder - second.sortOrder;
-  const sameCategory = products
+  const sameCategory = collection
     .filter(
       (candidate) =>
         candidate.id !== product.id &&
         candidate.categoryId === product.categoryId,
     )
     .sort(byCuratedOrder);
-  const otherCategories = products
+  const otherCategories = collection
     .filter(
       (candidate) =>
         candidate.id !== product.id &&

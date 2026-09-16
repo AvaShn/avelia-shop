@@ -4,10 +4,8 @@ import Link from "next/link";
 import { CatalogControls } from "@/components/product/catalog-controls";
 import { ProductGrid } from "@/components/product/product-grid";
 import { Button } from "@/components/ui/button";
-import {
-  getCatalogProducts,
-  normalizeCatalogQuery,
-} from "@/features/products/queries";
+import { normalizeCatalogQuery } from "@/features/products/queries";
+import { listStorefrontProducts } from "@/features/products/repository";
 import { formatPersianInteger } from "@/lib/i18n/format-number";
 
 export const metadata: Metadata = {
@@ -37,7 +35,7 @@ export default async function ProductsPage({
     q: firstValue(parameters.q),
     discount: firstValue(parameters.discount),
   });
-  const catalogProducts = getCatalogProducts(query);
+  const catalogProducts = await listStorefrontProducts(query);
 
   return (
     <main id="main-content">

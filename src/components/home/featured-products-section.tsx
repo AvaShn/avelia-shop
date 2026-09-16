@@ -5,13 +5,13 @@ import { SectionHeading } from "@/components/home/section-heading";
 import { Container } from "@/components/layout/container";
 import { Reveal } from "@/components/motion/reveal";
 import { ProductCard } from "@/components/product/product-card";
-import {
-  getFeaturedProducts,
-  toProductCardData,
-} from "@/features/products/queries";
+import { toProductCardData } from "@/features/products/queries";
+import { listFeaturedStorefrontProducts } from "@/features/products/repository";
 
-export function FeaturedProductsSection() {
-  const featuredProducts = getFeaturedProducts().map(toProductCardData);
+export async function FeaturedProductsSection() {
+  const featuredProducts = (await listFeaturedStorefrontProducts()).map(
+    toProductCardData,
+  );
 
   return (
     <section
@@ -35,7 +35,7 @@ export function FeaturedProductsSection() {
             </Link>
           </div>
 
-          <div className="-mx-5 mt-12 grid snap-x snap-mandatory [scrollbar-width:none] auto-cols-[84%] grid-flow-col gap-4 overflow-x-auto px-5 pb-3 sm:-mx-8 sm:auto-cols-[45%] sm:px-8 lg:mx-0 lg:grid-flow-row lg:grid-cols-4 lg:gap-5 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
+          <div className="-mx-5 mt-12 grid snap-x snap-mandatory [scrollbar-width:none] auto-cols-[78%] grid-flow-col items-stretch gap-4 overflow-x-auto px-5 pb-3 sm:-mx-8 sm:auto-cols-[42%] sm:px-8 lg:mx-0 lg:grid-flow-row lg:grid-cols-4 lg:gap-5 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
             {featuredProducts.map((product, index) => (
               <ProductCard
                 key={product.id}

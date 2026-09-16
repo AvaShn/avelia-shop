@@ -8,11 +8,11 @@ import { PreviewAddToSelection } from "@/components/product/preview-add-to-selec
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductGrid } from "@/components/product/product-grid";
 import { products } from "@/features/products/catalog";
+import { getProductCategory } from "@/features/products/queries";
 import {
-  getProductBySlug,
-  getProductCategory,
-  getRelatedProducts,
-} from "@/features/products/queries";
+  findStorefrontProductBySlug,
+  listRelatedStorefrontProducts,
+} from "@/features/products/repository";
 import { formatPersianInteger } from "@/lib/i18n/format-number";
 import { getDiscountPercentage } from "@/lib/pricing/discount";
 import { formatPriceRial } from "@/lib/pricing/format-price";
@@ -29,7 +29,7 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await findStorefrontProductBySlug(slug);
 
   if (!product) {
     return { title: "محصول پیدا نشد" };
@@ -55,7 +55,7 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await findStorefrontProductBySlug(slug);
 
   if (!product) {
     notFound();
@@ -71,7 +71,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     discountPercentage > 0 && product.compareAtPriceRial
       ? formatPriceRial(product.compareAtPriceRial)
       : null;
-  const relatedProducts = getRelatedProducts(product, 3);
+  const relatedProducts = await listRelatedStorefrontProducts(product, 3);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const structuredData = {
     "@context": "https://schema.org",

@@ -21,6 +21,57 @@ test("browses and filters the beauty catalog", async ({ page }) => {
   await expect(page.getByText("سرم شب بازسازی")).toHaveCount(0);
 });
 
+test("keeps product cards compact and aligned with long names", async ({
+  page,
+}) => {
+  await page.goto("/products", { waitUntil: "domcontentloaded" });
+
+  const grid = page.locator("main article").first().locator("..");
+  const columnCount = await grid.evaluate(
+    (element) =>
+      window.getComputedStyle(element).gridTemplateColumns.split(" ").length,
+  );
+  const viewportWidth = page.viewportSize()?.width ?? 0;
+  expect(columnCount).toBe(
+    viewportWidth >= 1024 ? 4 : viewportWidth >= 640 ? 2 : 1,
+  );
+
+  const cardHeights = await page
+    .locator("main article")
+    .evaluateAll((elements) =>
+      elements
+        .slice(0, 8)
+        .map((element) => Math.round(element.getBoundingClientRect().height)),
+    );
+
+  expect(
+    Math.max(...cardHeights) - Math.min(...cardHeights),
+  ).toBeLessThanOrEqual(1);
+});
+
+test("serves typed product data through the database-backed API", async ({
+  request,
+}) => {
+  const listResponse = await request.get("/api/products?discount=1");
+  expect(listResponse.ok()).toBe(true);
+
+  const listPayload = (await listResponse.json()) as {
+    data: Array<{ slug: string }>;
+    meta: { count: number; query: { discount: boolean } };
+  };
+  expect(listPayload.meta.count).toBe(10);
+  expect(listPayload.meta.query.discount).toBe(true);
+
+  const detailResponse = await request.get(
+    `/api/products/${listPayload.data[0]?.slug ?? "missing"}`,
+  );
+  expect(detailResponse.ok()).toBe(true);
+  expect(detailResponse.headers()["cache-control"]).toMatch(/s-maxage=60/);
+
+  const missingResponse = await request.get("/api/products/not-a-real-product");
+  expect(missingResponse.status()).toBe(404);
+});
+
 test("shows the dedicated discounted-products collection", async ({ page }) => {
   await page.goto("/products?discount=1", { waitUntil: "domcontentloaded" });
 

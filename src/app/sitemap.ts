@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
 
-import { products } from "@/features/products/catalog";
+import { listStorefrontProducts } from "@/features/products/repository";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const now = new Date();
+  const products = await listStorefrontProducts();
 
   return [
     {

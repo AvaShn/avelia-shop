@@ -6,17 +6,19 @@ skincare, and fragrance, built with Next.js 15.
 ## Local development
 
 1. Copy `.env.example` to `.env.local`.
-2. Fill only the values needed for the phase being developed.
-3. Install dependencies with `npm install`.
-4. Start the development server with `npm run dev`.
+2. For database-backed products, set the Supabase `DATABASE_URL` and
+   `DIRECT_URL` values described in `prisma/README.md`.
+3. Install dependencies with `pnpm install`.
+4. Run `pnpm db:deploy` and `pnpm db:seed` after connecting Supabase.
+5. Start the development server with `pnpm dev`.
 
 ## Quality checks
 
-- `npm run lint`
-- `npm run typecheck`
-- `npm run test`
-- `npm run build`
-- `npm run test:e2e` after installing Playwright Chromium
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
+- `pnpm test:e2e` after `pnpm build` and installing Playwright Chromium
 
 ## Delivery status
 
@@ -25,4 +27,7 @@ system and shared UI primitives. Phase 3 delivers the complete premium beauty
 homepage. Phase 4 adds a typed 28-item cosmetics catalog (including the 19
 provided product assets), search, category and discount filters, sorting,
 discount pricing, product galleries, detailed product pages, related products,
-metadata, structured data, and a sitemap. Prisma persistence begins in Phase 5.
+metadata, structured data, and a sitemap. Phase 5 adds the complete PostgreSQL
+schema, Prisma client and migrations, repeatable catalog seed, database-backed
+storefront repositories, and typed read-only product APIs. Cart and checkout
+begin in Phase 6.
