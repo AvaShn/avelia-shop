@@ -50,7 +50,7 @@ test("renders every required homepage section", async ({ page }) => {
 test("keeps primary link buttons readable", async ({ page }) => {
   await page.goto("/");
 
-  const primaryLink = page.getByRole("link", { name: "کشف دنیای زیبایی" });
+  const primaryLink = page.getByRole("link", { name: "کشف مجموعه" });
   const colors = await primaryLink.evaluate((element) => {
     const styles = window.getComputedStyle(element);
     return {
@@ -65,7 +65,9 @@ test("keeps primary link buttons readable", async ({ page }) => {
 
 test("adds a product to the persistent cart", async ({ page }) => {
   await page.goto("/");
-  const addButton = page.getByRole("button", { name: "افزودن به سبد" }).first();
+  const addButton = page
+    .getByRole("button", { name: "افزودن به انتخاب‌ها" })
+    .first();
   await expect(addButton).toBeEnabled();
   await addButton.click();
 

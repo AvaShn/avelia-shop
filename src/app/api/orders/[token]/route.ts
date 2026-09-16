@@ -1,11 +1,17 @@
-import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 
-import { publicOrderTokenSchema } from "@/features/orders/schemas";
+import {
+  publicOrderSchema,
+  publicOrderTokenSchema,
+} from "@/features/orders/schemas";
 import { OrderServiceError, findPublicOrder } from "@/features/orders/service";
-import type {
-  OrderApiErrorResponse,
-  OrderApiResponse,
-} from "@/features/orders/types";
+import {
+  apiFailure,
+  apiRateLimitFailure,
+  apiSuccess,
+  logApiError,
+} from "@/lib/api/response";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,45 +20,55 @@ type OrderRouteContext = {
   params: Promise<{ token: string }>;
 };
 
-export async function GET(_request: Request, context: OrderRouteContext) {
+export async function GET(request: Request, context: OrderRouteContext) {
+  const requestId = randomUUID();
+  const rateLimit = await consumeRateLimit(request, {
+    scope: "orders:read",
+    limit: 60,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return apiRateLimitFailure(rateLimit, requestId);
+
   const parsedToken = publicOrderTokenSchema.safeParse(
     (await context.params).token,
   );
-
   if (!parsedToken.success) {
-    return NextResponse.json<OrderApiErrorResponse>(
+    return apiFailure(
+      400,
       {
-        error: {
-          code: "INVALID_REQUEST",
-          message: "شناسهٔ پیگیری سفارش معتبر نیست.",
-        },
+        code: "INVALID_REQUEST",
+        message: "شناسهٔ پیگیری سفارش معتبر نیست.",
       },
-      { status: 400 },
+      { requestId, rateLimit },
     );
   }
 
   try {
-    return NextResponse.json<OrderApiResponse>(
-      { data: await findPublicOrder(parsedToken.data) },
-      { headers: { "Cache-Control": "private, no-store" } },
+    const order = publicOrderSchema.parse(
+      await findPublicOrder(parsedToken.data),
     );
+    return apiSuccess(order, {
+      requestId,
+      rateLimit,
+      headers: { "Cache-Control": "private, no-store" },
+    });
   } catch (error: unknown) {
     if (error instanceof OrderServiceError) {
-      return NextResponse.json<OrderApiErrorResponse>(
-        { error: { code: error.code, message: error.message } },
-        { status: error.status },
+      return apiFailure(
+        error.status,
+        { code: error.code, message: error.message },
+        { requestId, rateLimit },
       );
     }
 
-    console.error("Failed to read an AVELIA order.", error);
-    return NextResponse.json<OrderApiErrorResponse>(
+    logApiError("orders:read", requestId, error);
+    return apiFailure(
+      500,
       {
-        error: {
-          code: "INTERNAL_ERROR",
-          message: "نمایش سفارش در حال حاضر امکان‌پذیر نیست.",
-        },
+        code: "INTERNAL_ERROR",
+        message: "نمایش سفارش ممکن نشد. چند لحظه دیگر دوباره تلاش کنید.",
       },
-      { status: 500 },
+      { requestId, rateLimit },
     );
   }
 }

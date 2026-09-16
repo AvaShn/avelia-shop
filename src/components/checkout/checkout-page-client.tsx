@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, CheckCircle2, LoaderCircle, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle2, LoaderCircle } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingState } from "@/components/ui/loading-state";
+import { TelegramHandoffButton } from "@/components/checkout/telegram-handoff-button";
 import { useCart } from "@/features/cart/cart-provider";
 import type {
   CreateOrderApiResponse,
-  OrderApiErrorResponse,
+  PublicOrder,
 } from "@/features/orders/types";
 import { formatPriceRial } from "@/lib/pricing/format-price";
 
@@ -30,9 +31,7 @@ export function CheckoutPageClient() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdOrder, setCreatedOrder] = useState<
-    CreateOrderApiResponse["data"] | null
-  >(null);
+  const [createdOrder, setCreatedOrder] = useState<PublicOrder | null>(null);
   const idempotencyKey = useRef<string | null>(null);
 
   if (isLoading) {
@@ -65,22 +64,7 @@ export function CheckoutPageClient() {
             </p>
 
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              {createdOrder.telegramUrl ? (
-                <Button size="lg" asChild>
-                  <a
-                    href={createdOrder.telegramUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    ادامه امن در تلگرام
-                    <Send aria-hidden="true" />
-                  </a>
-                </Button>
-              ) : (
-                <p className="bg-muted text-muted-foreground rounded-lg px-4 py-3 text-sm">
-                  لینک ربات پس از تنظیم نام کاربری تلگرام فروشگاه فعال می‌شود.
-                </p>
-              )}
+              <TelegramHandoffButton orderToken={createdOrder.publicToken} />
               <Button size="lg" variant="outline" asChild>
                 <Link href={`/order/${createdOrder.publicToken}`}>
                   مشاهده وضعیت سفارش
@@ -129,16 +113,14 @@ export function CheckoutPageClient() {
         },
         body: JSON.stringify({ customer }),
       });
-      const payload = (await response.json()) as
-        CreateOrderApiResponse | OrderApiErrorResponse;
+      const payload = (await response.json()) as CreateOrderApiResponse;
 
-      if (!response.ok || !("data" in payload)) {
-        const message =
-          "error" in payload ? payload.error.message : "ثبت سفارش انجام نشد.";
+      if (!response.ok || payload.error || !payload.data) {
+        const message = payload.error?.message ?? "ثبت سفارش انجام نشد.";
         setError(message);
 
         if (
-          "error" in payload &&
+          payload.error &&
           (payload.error.code === "STOCK_CHANGED" ||
             payload.error.code === "EMPTY_CART")
         ) {

@@ -1,11 +1,19 @@
-import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
+
 import { z } from "zod";
 
-import type {
-  ApiErrorResponse,
-  ProductApiResponse,
-} from "@/features/products/api-types";
-import { findStorefrontProductBySlug } from "@/features/products/repository";
+import { productDetailsApiDataSchema } from "@/features/products/api-types";
+import {
+  findStorefrontProductBySlug,
+  listRelatedStorefrontProducts,
+} from "@/features/products/repository";
+import {
+  apiFailure,
+  apiRateLimitFailure,
+  apiSuccess,
+  logApiError,
+} from "@/lib/api/response";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -20,55 +28,58 @@ type ProductApiRouteContext = {
   params: Promise<{ slug: string }>;
 };
 
-export async function GET(_request: Request, context: ProductApiRouteContext) {
-  const parsedSlug = productSlugSchema.safeParse((await context.params).slug);
+export async function GET(request: Request, context: ProductApiRouteContext) {
+  const requestId = randomUUID();
+  const rateLimit = await consumeRateLimit(request, {
+    scope: "products:detail",
+    limit: 180,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return apiRateLimitFailure(rateLimit, requestId);
 
+  const parsedSlug = productSlugSchema.safeParse((await context.params).slug);
   if (!parsedSlug.success) {
-    return NextResponse.json<ApiErrorResponse>(
-      {
-        error: {
-          code: "INVALID_REQUEST",
-          message: "شناسهٔ محصول معتبر نیست.",
-        },
-      },
-      { status: 400 },
+    return apiFailure(
+      400,
+      { code: "INVALID_REQUEST", message: "شناسهٔ محصول معتبر نیست." },
+      { requestId, rateLimit },
     );
   }
 
   try {
     const product = await findStorefrontProductBySlug(parsedSlug.data);
-
     if (!product) {
-      return NextResponse.json<ApiErrorResponse>(
+      return apiFailure(
+        404,
         {
-          error: {
-            code: "NOT_FOUND",
-            message: "محصول موردنظر پیدا نشد.",
-          },
+          code: "NOT_FOUND",
+          message: "محصول پیدا نشد؛ می‌توانید به مجموعه محصولات بازگردید.",
         },
-        { status: 404 },
+        { requestId, rateLimit },
       );
     }
 
-    return NextResponse.json<ProductApiResponse>(
-      { data: product },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-        },
-      },
-    );
-  } catch (error: unknown) {
-    console.error("Failed to read an AVELIA product.", error);
+    const data = productDetailsApiDataSchema.parse({
+      product,
+      relatedProducts: await listRelatedStorefrontProducts(product, 4),
+    });
 
-    return NextResponse.json<ApiErrorResponse>(
-      {
-        error: {
-          code: "INTERNAL_ERROR",
-          message: "دریافت محصول در حال حاضر امکان‌پذیر نیست.",
-        },
+    return apiSuccess(data, {
+      requestId,
+      rateLimit,
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
       },
-      { status: 500 },
+    });
+  } catch (error: unknown) {
+    logApiError("products:detail", requestId, error);
+    return apiFailure(
+      500,
+      {
+        code: "INTERNAL_ERROR",
+        message: "دریافت محصول ممکن نشد. چند لحظه دیگر دوباره تلاش کنید.",
+      },
+      { requestId, rateLimit },
     );
   }
 }

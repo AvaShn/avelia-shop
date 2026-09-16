@@ -33,4 +33,9 @@ database-backed storefront repositories, and typed product APIs. Phase 6 adds
 persistent anonymous carts, responsive cart and checkout pages, server-side
 price and stock verification, transactional order creation, idempotency,
 inventory reservations, public order tracking, and the Telegram continuation
-link. Telegram receipt handling and admin review begin in Phase 7.
+link. Phase 7 completes the typed API layer: cursor-based product APIs, exact
+cart and order contracts, expiring Telegram handoff and verified webhook,
+private receipt storage, authenticated admin order review, shared response
+envelopes, request-size limits, CSRF checks, and database-backed rate limiting.
+
+API setup and contracts are documented in [`docs/API.md`](docs/API.md).

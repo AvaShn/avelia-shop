@@ -17,7 +17,20 @@ describe("product catalog queries", () => {
       sort: "curated",
       q: "",
       discount: false,
+      featured: undefined,
+      availability: "all",
     });
+  });
+
+  it("filters featured and available products for public API queries", () => {
+    const featured = getCatalogProducts({
+      featured: true,
+      availability: "in-stock",
+    });
+
+    expect(featured.length).toBeGreaterThan(0);
+    expect(featured.every((product) => product.isFeatured)).toBe(true);
+    expect(featured.every((product) => product.stock > 0)).toBe(true);
   });
 
   it("filters the catalog to genuine discounted products", () => {

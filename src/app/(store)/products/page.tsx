@@ -84,7 +84,7 @@ export default async function ProductsPage({
           </p>
 
           {catalogProducts.length > 0 ? (
-            <ProductGrid products={catalogProducts} />
+            <ProductGrid products={catalogProducts} prioritizeFirstImage />
           ) : (
             <div className="border-border/70 bg-surface mx-auto max-w-2xl rounded-xl border px-6 py-16 text-center sm:px-12">
               <h2 className="text-2xl font-semibold">محصولی پیدا نشد</h2>

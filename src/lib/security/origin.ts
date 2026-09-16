@@ -1,6 +1,13 @@
 export function isTrustedMutationOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (!origin) return true;
+  const fetchSite = request.headers.get("sec-fetch-site");
+
+  if (fetchSite === "cross-site") return false;
+  if (!origin) {
+    return (
+      !fetchSite || fetchSite === "same-origin" || fetchSite === "same-site"
+    );
+  }
 
   const allowedOrigins = new Set([new URL(request.url).origin]);
   const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL;

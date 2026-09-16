@@ -40,22 +40,6 @@ function safeBigIntToNumber(value: bigint, field: string) {
   return number;
 }
 
-function buildTelegramUrl(paymentSessionToken: string) {
-  const username = serverEnvironment.TELEGRAM_BOT_USERNAME;
-  if (!username) return undefined;
-
-  const url = new URL(`https://t.me/${username.replace(/^@/, "")}`);
-  url.searchParams.set("start", paymentSessionToken);
-  return url.toString();
-}
-
-export function telegramPaymentUrlForOrder(publicOrderToken: string) {
-  const secret = serverEnvironment.PAYMENT_SESSION_SECRET;
-  if (!secret) return undefined;
-
-  return buildTelegramUrl(createPaymentSessionToken(publicOrderToken, secret));
-}
-
 async function publicOrderByToken(publicToken: string): Promise<PublicOrder> {
   const prisma = getPrismaClient();
   if (!prisma) {
@@ -313,13 +297,7 @@ export async function createOrderFromCart(input: CreateOrderInput) {
     }
   }
 
-  const order = await publicOrderByToken(publicToken);
-  const telegramUrl = telegramPaymentUrlForOrder(publicToken);
-
-  return {
-    ...order,
-    ...(telegramUrl ? { telegramUrl } : {}),
-  };
+  return publicOrderByToken(publicToken);
 }
 
 export async function findPublicOrder(publicToken: string) {

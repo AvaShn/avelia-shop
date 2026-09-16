@@ -35,9 +35,9 @@ async function readResponse(response: Response) {
   const payload = (await response.json()) as
     CartApiResponse | CartApiErrorResponse;
 
-  if (!response.ok || !("data" in payload)) {
+  if (!response.ok || payload.error || !payload.data) {
     throw new Error(
-      "error" in payload
+      payload.error
         ? payload.error.message
         : "سبد خرید در حال حاضر در دسترس نیست.",
     );
@@ -130,24 +130,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateQuantity = useCallback(
     (productId: string, quantity: number) =>
-      mutateCart(
-        productId,
-        `/api/cart/items/${encodeURIComponent(productId)}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ quantity }),
-        },
-      ),
+      mutateCart(productId, `/api/cart/${encodeURIComponent(productId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ quantity }),
+      }),
     [mutateCart],
   );
 
   const removeItem = useCallback(
     (productId: string) =>
-      mutateCart(
-        productId,
-        `/api/cart/items/${encodeURIComponent(productId)}`,
-        { method: "DELETE" },
-      ),
+      mutateCart(productId, `/api/cart/${encodeURIComponent(productId)}`, {
+        method: "DELETE",
+      }),
     [mutateCart],
   );
 

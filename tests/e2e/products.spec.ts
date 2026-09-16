@@ -6,7 +6,9 @@ test("browses and filters the beauty catalog", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "انتخابی روشن‌تر در دنیای زیبایی" }),
   ).toBeVisible();
-  await expect(page.getByText("۲۸ محصول برای نمایش")).toBeVisible();
+  await expect(
+    page.getByRole("main").getByText("۲۸ محصول برای نمایش"),
+  ).toBeVisible();
   await expect(
     page.getByText("کرم‌پودر Super Stay Lumi-Matte شماره ۱۱۹").first(),
   ).toBeVisible();
@@ -16,7 +18,9 @@ test("browses and filters the beauty catalog", async ({ page }) => {
   await page.getByRole("link", { name: "لوازم آرایشی" }).click();
 
   await expect(page).toHaveURL(/category=makeup/);
-  await expect(page.getByText("۱۴ محصول برای نمایش")).toBeVisible();
+  await expect(
+    page.getByRole("main").getByText("۱۴ محصول برای نمایش"),
+  ).toBeVisible();
   await expect(page.getByText("ریمل حجم‌دهنده دیفینیشن").first()).toBeVisible();
   await expect(page.getByText("سرم شب بازسازی")).toHaveCount(0);
 });
@@ -24,17 +28,22 @@ test("browses and filters the beauty catalog", async ({ page }) => {
 test("keeps product cards compact and aligned with long names", async ({
   page,
 }) => {
-  await page.goto("/products", { waitUntil: "domcontentloaded" });
+  await page.goto("/products");
 
-  const grid = page.locator("main article").first().locator("..");
-  const columnCount = await grid.evaluate(
-    (element) =>
-      window.getComputedStyle(element).gridTemplateColumns.split(" ").length,
-  );
+  const grid = page.getByTestId("product-grid");
+  await expect(grid).toBeVisible();
   const viewportWidth = page.viewportSize()?.width ?? 0;
-  expect(columnCount).toBe(
-    viewportWidth >= 1024 ? 4 : viewportWidth >= 640 ? 2 : 1,
-  );
+  const expectedColumns =
+    viewportWidth >= 1024 ? 4 : viewportWidth >= 640 ? 2 : 1;
+  await expect
+    .poll(() =>
+      grid.evaluate(
+        (element) =>
+          window.getComputedStyle(element).gridTemplateColumns.split(" ")
+            .length,
+      ),
+    )
+    .toBe(expectedColumns);
 
   const cardHeights = await page
     .locator("main article")
@@ -67,6 +76,13 @@ test("serves typed product data through the database-backed API", async ({
   );
   expect(detailResponse.ok()).toBe(true);
   expect(detailResponse.headers()["cache-control"]).toMatch(/s-maxage=60/);
+  const detailPayload = (await detailResponse.json()) as {
+    data: { product: { slug: string }; relatedProducts: unknown[] };
+    error: null;
+  };
+  expect(detailPayload.data.product.slug).toBe(listPayload.data[0]?.slug);
+  expect(detailPayload.data.relatedProducts.length).toBeGreaterThan(0);
+  expect(detailPayload.error).toBeNull();
 
   const missingResponse = await request.get("/api/products/not-a-real-product");
   expect(missingResponse.status()).toBe(404);
@@ -79,8 +95,8 @@ test("shows the dedicated discounted-products collection", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "تخفیف‌های منتخب" }),
   ).toHaveAttribute("aria-current", "page");
-  await expect(page.getByText("٪۱۱ تخفیف").first()).toBeVisible();
   await expect(page.getByText("۱۸٬۹۰۰٬۰۰۰ ریال").first()).toBeVisible();
+  await expect(page.getByText("۱۶٬۹۰۰٬۰۰۰ ریال").first()).toBeVisible();
 });
 
 test("searches products from the shared header", async ({ page }) => {

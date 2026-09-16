@@ -4,16 +4,23 @@ import type { Product } from "@/features/products/types";
 
 type ProductGridProps = {
   products: readonly Product[];
+  prioritizeFirstImage?: boolean;
 };
 
-export function ProductGrid({ products }: ProductGridProps) {
+export function ProductGrid({
+  products,
+  prioritizeFirstImage = false,
+}: ProductGridProps) {
   return (
-    <div className="grid items-stretch gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-16">
+    <div
+      data-testid="product-grid"
+      className="grid items-stretch gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-16"
+    >
       {products.map((product, index) => (
         <ProductCard
           key={product.id}
           product={toProductCardData(product)}
-          priority={index < 3}
+          priority={prioritizeFirstImage && index === 0}
         />
       ))}
     </div>

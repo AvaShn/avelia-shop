@@ -2,16 +2,12 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Clock3, Send, ShieldCheck } from "lucide-react";
+import { Clock3, ShieldCheck } from "lucide-react";
 
+import { TelegramHandoffButton } from "@/components/checkout/telegram-handoff-button";
 import { Container } from "@/components/layout/container";
-import { Button } from "@/components/ui/button";
 import { publicOrderTokenSchema } from "@/features/orders/schemas";
-import {
-  OrderServiceError,
-  findPublicOrder,
-  telegramPaymentUrlForOrder,
-} from "@/features/orders/service";
+import { OrderServiceError, findPublicOrder } from "@/features/orders/service";
 import type { PublicOrderStatus } from "@/features/orders/types";
 import { formatPriceRial } from "@/lib/pricing/format-price";
 
@@ -62,7 +58,6 @@ export default async function OrderPage({ params }: OrderPageProps) {
 
   const content = statusContent[order.status];
   const total = formatPriceRial(order.totalPriceRial);
-  const telegramUrl = telegramPaymentUrlForOrder(order.publicToken);
 
   return (
     <main id="main-content">
@@ -135,13 +130,10 @@ export default async function OrderPage({ params }: OrderPageProps) {
             </span>
           </div>
 
-          {order.status === "PENDING_PAYMENT" && telegramUrl ? (
-            <Button className="mt-8 w-full sm:w-auto" size="lg" asChild>
-              <a href={telegramUrl} target="_blank" rel="noreferrer">
-                ادامه در تلگرام
-                <Send aria-hidden="true" />
-              </a>
-            </Button>
+          {order.status === "PENDING_PAYMENT" ? (
+            <div className="mt-8">
+              <TelegramHandoffButton orderToken={order.publicToken} />
+            </div>
           ) : null}
         </section>
       </Container>

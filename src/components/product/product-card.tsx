@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import type { ProductCardData } from "@/features/products/types";
-import { formatPersianInteger } from "@/lib/i18n/format-number";
 import { getDiscountPercentage } from "@/lib/pricing/discount";
 import { formatPriceRial } from "@/lib/pricing/format-price";
 
@@ -41,11 +40,6 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         {product.isOriginal ? (
           <span className="bg-surface/90 text-foreground absolute top-4 right-4 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-md">
             تضمین اصالت
-          </span>
-        ) : null}
-        {discountPercentage > 0 ? (
-          <span className="absolute top-4 left-4 rounded-full bg-[#7a3045] px-3 py-1.5 text-xs font-medium text-white shadow-sm">
-            ٪{formatPersianInteger(discountPercentage)} تخفیف
           </span>
         ) : null}
       </Link>

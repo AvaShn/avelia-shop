@@ -7,7 +7,7 @@ const footerLinks = [
   { label: "ارتباط با ما", href: "/contact" },
   { label: "حریم خصوصی", href: "/policies/privacy" },
   { label: "شرایط سفارش", href: "/policies/terms" },
-  { label: "شبکه‌های اجتماعی", href: "/contact#social" },
+  { label: "شبکه‌های اجتماعی", href: "/social" },
 ] as const;
 
 export function SiteFooter() {

@@ -55,7 +55,7 @@ export function AddToCartButton({
         </>
       ) : isAvailable ? (
         <>
-          افزودن به سبد
+          افزودن به انتخاب‌ها
           <Plus aria-hidden="true" />
         </>
       ) : (

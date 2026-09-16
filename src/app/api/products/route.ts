@@ -1,50 +1,91 @@
-import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 
-import type {
-  ApiErrorResponse,
-  ProductsApiResponse,
+import {
+  productsApiDataSchema,
+  productsApiQuerySchema,
+  type ProductsApiMeta,
 } from "@/features/products/api-types";
-import { normalizeCatalogQuery } from "@/features/products/queries";
-import { listStorefrontProducts } from "@/features/products/repository";
+import { listStorefrontProductPage } from "@/features/products/repository";
+import {
+  apiFailure,
+  apiRateLimitFailure,
+  apiSuccess,
+  logApiError,
+} from "@/lib/api/response";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  try {
-    const parameters = new URL(request.url).searchParams;
-    const query = normalizeCatalogQuery({
-      category: parameters.get("category") ?? undefined,
-      sort: parameters.get("sort") ?? undefined,
-      q: parameters.get("q") ?? undefined,
-      discount: parameters.get("discount") ?? undefined,
-    });
-    const products = await listStorefrontProducts(query);
+  const requestId = randomUUID();
+  const rateLimit = await consumeRateLimit(request, {
+    scope: "products:list",
+    limit: 120,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return apiRateLimitFailure(rateLimit, requestId);
 
-    return NextResponse.json<ProductsApiResponse>(
+  const parameters = Object.fromEntries(new URL(request.url).searchParams);
+  const parsedQuery = productsApiQuerySchema.safeParse(parameters);
+
+  if (!parsedQuery.success) {
+    return apiFailure(
+      400,
       {
-        data: products,
-        meta: {
-          count: products.length,
-          query,
-        },
+        code: "INVALID_REQUEST",
+        message: "فیلترهای محصولات معتبر نیستند. آن‌ها را بررسی کنید.",
+        fieldErrors: parsedQuery.error.flatten().fieldErrors,
       },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-        },
-      },
+      { requestId, rateLimit },
     );
-  } catch (error: unknown) {
-    console.error("Failed to list AVELIA products.", error);
+  }
 
-    return NextResponse.json<ApiErrorResponse>(
-      {
-        error: {
-          code: "INTERNAL_ERROR",
-          message: "دریافت محصولات در حال حاضر امکان‌پذیر نیست.",
+  try {
+    const page = await listStorefrontProductPage(parsedQuery.data);
+    if (page.kind === "invalid-cursor") {
+      return apiFailure(
+        400,
+        {
+          code: "INVALID_CURSOR",
+          message: "صفحهٔ درخواستی معتبر نیست؛ فهرست را از ابتدا باز کنید.",
         },
+        { requestId, rateLimit },
+      );
+    }
+
+    const data = productsApiDataSchema.parse(page.products);
+    const normalizedQuery = {
+      category: parsedQuery.data.category,
+      sort: parsedQuery.data.sort,
+      q: parsedQuery.data.q,
+      discount: parsedQuery.data.discount,
+      featured: parsedQuery.data.featured,
+      availability: parsedQuery.data.availability,
+      limit: parsedQuery.data.limit,
+    };
+
+    return apiSuccess<typeof data, ProductsApiMeta>(data, {
+      requestId,
+      rateLimit,
+      meta: {
+        count: data.length,
+        total: page.total,
+        nextCursor: page.nextCursor,
+        query: normalizedQuery,
       },
-      { status: 500 },
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+      },
+    });
+  } catch (error: unknown) {
+    logApiError("products:list", requestId, error);
+    return apiFailure(
+      500,
+      {
+        code: "INTERNAL_ERROR",
+        message: "دریافت محصولات ممکن نشد. چند لحظه دیگر دوباره تلاش کنید.",
+      },
+      { requestId, rateLimit },
     );
   }
 }

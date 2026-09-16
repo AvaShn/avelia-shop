@@ -43,7 +43,7 @@ export function HeroSection() {
           </p>
           <Button size="lg" asChild className="mt-9">
             <Link href="#featured-products">
-              کشف دنیای زیبایی
+              کشف مجموعه
               <ArrowDownLeft aria-hidden="true" />
             </Link>
           </Button>

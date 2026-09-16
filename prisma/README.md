@@ -27,6 +27,11 @@ user, order, immutable line-item prices, and pending payment. Configure
 deployment so expired reservations are released. Application requests never
 run schema migrations implicitly.
 
+The same protected cleanup request removes expired API rate-limit windows. In
+production, rate-limit counters are stored in PostgreSQL so limits remain
+consistent across Vercel instances; local development falls back to an
+in-memory counter when no database is configured.
+
 For schema changes during development, create a new migration with
 `pnpm db:migrate -- --name <migration-name>`. Never edit an already-applied
 migration.

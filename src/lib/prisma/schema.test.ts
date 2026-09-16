@@ -28,7 +28,17 @@ const cartCheckoutMigration = readFileSync(
   ),
   "utf8",
 );
-const migrations = `${initialMigration}\n${cartCheckoutMigration}`;
+const apiSecurityMigration = readFileSync(
+  join(
+    projectPath,
+    "prisma",
+    "migrations",
+    "20260916120000_phase_7_api_security",
+    "migration.sql",
+  ),
+  "utf8",
+);
+const migrations = `${initialMigration}\n${cartCheckoutMigration}\n${apiSecurityMigration}`;
 
 describe("Prisma database contract", () => {
   it.each([
@@ -40,8 +50,15 @@ describe("Prisma database contract", () => {
     "Order",
     "OrderItem",
     "Payment",
+    "ApiRateLimit",
   ])("defines the %s model required by AVELIA", (model) => {
     expect(schema).toContain(`model ${model} {`);
+  });
+
+  it("uses a shared persistent rate-limit model for serverless API instances", () => {
+    expect(schema).toContain("model ApiRateLimit {");
+    expect(schema).toContain("@@id([scope, keyHash, windowStart])");
+    expect(apiSecurityMigration).toContain('CREATE TABLE "ApiRateLimit"');
   });
 
   it("stores monetary values as bigint and enforces stock constraints", () => {
@@ -80,7 +97,7 @@ describe("Prisma database contract", () => {
     expect(schema).toContain("reviewedBy");
     expect(schema).toContain("reviewNote");
     expect(schema).toMatch(
-      /model OrderItem \{[\s\S]*createdAt DateTime @default\(now\(\)\)[\s\S]*updatedAt DateTime @updatedAt/,
+      /model OrderItem \{[\s\S]*createdAt\s+DateTime @default\(now\(\)\)[\s\S]*updatedAt\s+DateTime @updatedAt/,
     );
   });
 });

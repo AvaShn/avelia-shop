@@ -1,7 +1,8 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 
-import { addCartItemSchema } from "@/features/cart/schemas";
+import type { NextRequest } from "next/server";
+
+import { addCartItemSchema, cartViewSchema } from "@/features/cart/schemas";
 import {
   CartServiceError,
   addCartItem,
@@ -11,86 +12,124 @@ import {
   commitCartSession,
   readCartRequestSession,
 } from "@/features/cart/session";
-import type {
-  CartApiErrorResponse,
-  CartApiResponse,
-} from "@/features/cart/types";
+import { ApiRequestError, readJsonBody } from "@/lib/api/request";
+import {
+  apiFailure,
+  apiRateLimitFailure,
+  apiSuccess,
+  logApiError,
+} from "@/lib/api/response";
 import { isTrustedMutationOrigin } from "@/lib/security/origin";
+import {
+  consumeRateLimit,
+  type RateLimitResult,
+} from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function successResponse(result: Awaited<ReturnType<typeof readCart>>) {
-  const response = NextResponse.json<CartApiResponse>(
-    { data: result.cart },
-    { headers: { "Cache-Control": "private, no-store" } },
-  );
+function successResponse(
+  result: Awaited<ReturnType<typeof readCart>>,
+  requestId: string,
+  rateLimit: RateLimitResult,
+) {
+  const response = apiSuccess(cartViewSchema.parse(result.cart), {
+    requestId,
+    rateLimit,
+    headers: { "Cache-Control": "private, no-store" },
+  });
   commitCartSession(response, result.token, result.storedItems);
   return response;
 }
 
-function serviceErrorResponse(error: unknown) {
+function serviceErrorResponse(
+  error: unknown,
+  requestId: string,
+  rateLimit: RateLimitResult,
+) {
   if (error instanceof CartServiceError) {
-    return NextResponse.json<CartApiErrorResponse>(
-      { error: { code: error.code, message: error.message } },
-      { status: error.status },
+    return apiFailure(
+      error.status,
+      { code: error.code, message: error.message },
+      { requestId, rateLimit },
     );
   }
 
-  console.error("Failed to update the AVELIA cart.", error);
-  return NextResponse.json<CartApiErrorResponse>(
+  if (error instanceof ApiRequestError) {
+    return apiFailure(
+      error.status,
+      { code: error.code, message: error.message },
+      { requestId, rateLimit },
+    );
+  }
+
+  logApiError("cart", requestId, error);
+  return apiFailure(
+    500,
     {
-      error: {
-        code: "INTERNAL_ERROR",
-        message: "سبد خرید در حال حاضر در دسترس نیست. لطفاً دوباره تلاش کنید.",
-      },
+      code: "INTERNAL_ERROR",
+      message: "سبد خرید در دسترس نیست. چند لحظه دیگر دوباره تلاش کنید.",
     },
-    { status: 500 },
+    { requestId, rateLimit },
   );
 }
 
 export async function GET(request: NextRequest) {
-  const session = readCartRequestSession(request);
+  const requestId = randomUUID();
+  const rateLimit = await consumeRateLimit(request, {
+    scope: "cart:read",
+    limit: 120,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return apiRateLimitFailure(rateLimit, requestId);
 
+  const session = readCartRequestSession(request);
   try {
-    return successResponse(await readCart(session.token, session.storedItems));
+    return successResponse(
+      await readCart(session.token, session.storedItems),
+      requestId,
+      rateLimit,
+    );
   } catch (error: unknown) {
-    return serviceErrorResponse(error);
+    return serviceErrorResponse(error, requestId, rateLimit);
   }
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = randomUUID();
+  const rateLimit = await consumeRateLimit(request, {
+    scope: "cart:mutate",
+    limit: 60,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) return apiRateLimitFailure(rateLimit, requestId);
+
   if (!isTrustedMutationOrigin(request)) {
-    return NextResponse.json<CartApiErrorResponse>(
+    return apiFailure(
+      403,
       {
-        error: {
-          code: "INVALID_REQUEST",
-          message: "درخواست سبد خرید معتبر نیست.",
-        },
+        code: "FORBIDDEN_ORIGIN",
+        message: "این درخواست از مبدأ معتبری ارسال نشده است.",
       },
-      { status: 403 },
+      { requestId, rateLimit },
     );
   }
 
-  const body: unknown = await request.json().catch(() => null);
-  const parsedBody = addCartItemSchema.safeParse(body);
-
-  if (!parsedBody.success) {
-    return NextResponse.json<CartApiErrorResponse>(
-      {
-        error: {
+  try {
+    const parsedBody = addCartItemSchema.safeParse(await readJsonBody(request));
+    if (!parsedBody.success) {
+      return apiFailure(
+        400,
+        {
           code: "INVALID_REQUEST",
           message: "اطلاعات محصول را بررسی و دوباره تلاش کنید.",
           fieldErrors: parsedBody.error.flatten().fieldErrors,
         },
-      },
-      { status: 400 },
-    );
-  }
+        { requestId, rateLimit },
+      );
+    }
 
-  const session = readCartRequestSession(request);
-
-  try {
+    const session = readCartRequestSession(request);
     return successResponse(
       await addCartItem(
         session.token,
@@ -98,8 +137,10 @@ export async function POST(request: NextRequest) {
         parsedBody.data.productId,
         parsedBody.data.quantity,
       ),
+      requestId,
+      rateLimit,
     );
   } catch (error: unknown) {
-    return serviceErrorResponse(error);
+    return serviceErrorResponse(error, requestId, rateLimit);
   }
 }

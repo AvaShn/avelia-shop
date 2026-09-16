@@ -2,7 +2,15 @@ import "server-only";
 
 import { z } from "zod";
 
-const optionalSecret = z.string().trim().min(1).optional();
+function optionalEnvironmentValue<Schema extends z.ZodType>(schema: Schema) {
+  return z.preprocess(
+    (value) =>
+      typeof value === "string" && value.trim() === "" ? undefined : value,
+    schema.optional(),
+  );
+}
+
+const optionalSecret = optionalEnvironmentValue(z.string().trim().min(1));
 
 const serverEnvironmentSchema = z.object({
   NODE_ENV: z
@@ -24,7 +32,7 @@ const serverEnvironmentSchema = z.object({
     .max(10_080)
     .default(1_440),
   INVENTORY_CRON_SECRET: optionalSecret,
-  SUPABASE_URL: z.url().optional(),
+  SUPABASE_URL: optionalEnvironmentValue(z.url()),
   SUPABASE_SERVICE_ROLE_KEY: optionalSecret,
   SUPABASE_RECEIPTS_BUCKET: z
     .string()
@@ -32,13 +40,13 @@ const serverEnvironmentSchema = z.object({
     .min(1)
     .default("payment-receipts"),
   AUTH_SECRET: optionalSecret,
-  ADMIN_EMAIL: z.email().optional(),
+  ADMIN_EMAIL: optionalEnvironmentValue(z.email()),
   ADMIN_PASSWORD_HASH: optionalSecret,
   SMTP_HOST: optionalSecret,
   SMTP_PORT: z.coerce.number().int().positive().default(587),
   SMTP_USER: optionalSecret,
   SMTP_PASSWORD: optionalSecret,
-  SMTP_FROM: z.email().optional(),
+  SMTP_FROM: optionalEnvironmentValue(z.email()),
 });
 
 export type ServerEnvironment = z.infer<typeof serverEnvironmentSchema>;

@@ -14,6 +14,8 @@ export type CatalogQuery = {
   sort?: string | undefined;
   q?: string | undefined;
   discount?: string | boolean | undefined;
+  featured?: boolean | undefined;
+  availability?: "all" | "in-stock" | "out-of-stock" | undefined;
 };
 
 export type NormalizedCatalogQuery = {
@@ -21,6 +23,8 @@ export type NormalizedCatalogQuery = {
   sort: ProductSortId;
   q: string;
   discount: boolean;
+  featured: boolean | undefined;
+  availability: "all" | "in-stock" | "out-of-stock";
 };
 
 export function normalizeSearchText(value: string) {
@@ -49,6 +53,8 @@ export function normalizeCatalogQuery(
     sort,
     q: normalizeSearchText(query.q ?? "").slice(0, 80),
     discount: query.discount === true || query.discount === "1",
+    featured: query.featured,
+    availability: query.availability ?? "all",
   };
 }
 
@@ -90,6 +96,21 @@ export function queryProductCollection(
       normalized.discount &&
       !hasDiscount(product.priceRial, product.compareAtPriceRial)
     ) {
+      return false;
+    }
+
+    if (
+      normalized.featured !== undefined &&
+      product.isFeatured !== normalized.featured
+    ) {
+      return false;
+    }
+
+    if (normalized.availability === "in-stock" && product.stock <= 0) {
+      return false;
+    }
+
+    if (normalized.availability === "out-of-stock" && product.stock > 0) {
       return false;
     }
 

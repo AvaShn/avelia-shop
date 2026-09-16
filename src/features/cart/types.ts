@@ -1,3 +1,5 @@
+import type { ApiEnvelope } from "@/lib/api/contracts";
+
 export type CartProduct = {
   id: string;
   slug: string;
@@ -21,9 +23,7 @@ export type CartView = {
   totalPriceRial: number;
 };
 
-export type CartApiResponse = {
-  data: CartView;
-};
+export type CartApiResponse = ApiEnvelope<CartView>;
 
 export type CartApiErrorCode =
   | "INVALID_REQUEST"
@@ -32,13 +32,7 @@ export type CartApiErrorCode =
   | "CART_NOT_FOUND"
   | "INTERNAL_ERROR";
 
-export type CartApiErrorResponse = {
-  error: {
-    code: CartApiErrorCode;
-    message: string;
-    fieldErrors?: Record<string, string[]>;
-  };
-};
+export type CartApiErrorResponse = ApiEnvelope<CartView>;
 
 export type StoredCartItem = {
   productId: string;

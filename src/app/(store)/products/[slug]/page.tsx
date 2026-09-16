@@ -13,7 +13,6 @@ import {
   findStorefrontProductBySlug,
   listRelatedStorefrontProducts,
 } from "@/features/products/repository";
-import { formatPersianInteger } from "@/lib/i18n/format-number";
 import { getDiscountPercentage } from "@/lib/pricing/discount";
 import { formatPriceRial } from "@/lib/pricing/format-price";
 
@@ -184,16 +183,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             <div className="mt-8">
               {compareAtPrice ? (
-                <div className="mb-3 flex flex-wrap items-center gap-3">
+                <div className="mb-3">
                   <p
                     className="text-muted-foreground text-sm line-through"
                     dir="rtl"
                   >
                     {compareAtPrice.rial}
                   </p>
-                  <span className="rounded-full bg-[#7a3045] px-3 py-1 text-xs font-medium text-white">
-                    ٪{formatPersianInteger(discountPercentage)} تخفیف
-                  </span>
                 </div>
               ) : null}
               <p className="text-2xl font-semibold" dir="rtl">

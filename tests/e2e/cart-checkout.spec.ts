@@ -3,7 +3,9 @@ import { expect, test } from "@playwright/test";
 test("persists cart items and updates quantities", async ({ page }) => {
   await page.goto("/products/satin-lipstick-muted-rose");
 
-  const addButton = page.getByRole("button", { name: "افزودن به سبد" }).first();
+  const addButton = page
+    .getByRole("button", { name: "افزودن به انتخاب‌ها" })
+    .first();
   await expect(addButton).toBeEnabled();
   await addButton.click();
   await expect(page.getByText("به سبد انتخاب‌ها اضافه شد")).toBeVisible();
@@ -30,7 +32,9 @@ test("persists cart items and updates quantities", async ({ page }) => {
 
 test("shows the mobile-first checkout trust flow", async ({ page }) => {
   await page.goto("/products/satin-lipstick-muted-rose");
-  const addButton = page.getByRole("button", { name: "افزودن به سبد" }).first();
+  const addButton = page
+    .getByRole("button", { name: "افزودن به انتخاب‌ها" })
+    .first();
   await expect(addButton).toBeEnabled();
   await addButton.click();
 
