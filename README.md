@@ -27,7 +27,10 @@ system and shared UI primitives. Phase 3 delivers the complete premium beauty
 homepage. Phase 4 adds a typed 28-item cosmetics catalog (including the 19
 provided product assets), search, category and discount filters, sorting,
 discount pricing, product galleries, detailed product pages, related products,
-metadata, structured data, and a sitemap. Phase 5 adds the complete PostgreSQL
-schema, Prisma client and migrations, repeatable catalog seed, database-backed
-storefront repositories, and typed read-only product APIs. Cart and checkout
-begin in Phase 6.
+metadata, structured data, and a sitemap. Phase 5 adds the PostgreSQL schema,
+Prisma client and versioned migrations, repeatable catalog seed,
+database-backed storefront repositories, and typed product APIs. Phase 6 adds
+persistent anonymous carts, responsive cart and checkout pages, server-side
+price and stock verification, transactional order creation, idempotency,
+inventory reservations, public order tracking, and the Telegram continuation
+link. Telegram receipt handling and admin review begin in Phase 7.

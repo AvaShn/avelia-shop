@@ -21,7 +21,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm start",
+    command: "node node_modules/next/dist/bin/next start",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
   },

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { PreviewAddToSelection } from "@/components/product/preview-add-to-selection";
+import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import type { ProductCardData } from "@/features/products/types";
 import { formatPersianInteger } from "@/lib/i18n/format-number";
 import { getDiscountPercentage } from "@/lib/pricing/discount";
@@ -86,7 +86,8 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           </p>
         </div>
 
-        <PreviewAddToSelection
+        <AddToCartButton
+          productId={product.id}
           productName={product.name}
           isAvailable={product.stock > 0}
         />

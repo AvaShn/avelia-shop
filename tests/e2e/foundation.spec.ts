@@ -63,12 +63,14 @@ test("keeps primary link buttons readable", async ({ page }) => {
   expect(colors.text).toBe("rgb(255, 253, 249)");
 });
 
-test("shows a clear preview message for cart actions", async ({ page }) => {
+test("adds a product to the persistent cart", async ({ page }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "افزودن به انتخاب‌ها" })
-    .first()
-    .click();
+  const addButton = page.getByRole("button", { name: "افزودن به سبد" }).first();
+  await expect(addButton).toBeEnabled();
+  await addButton.click();
 
-  await expect(page.getByText("سبد خرید در فاز ۶ فعال می‌شود")).toBeVisible();
+  await expect(page.getByText("به سبد انتخاب‌ها اضافه شد")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /سبد خرید، ۱ محصول/ }),
+  ).toBeVisible();
 });

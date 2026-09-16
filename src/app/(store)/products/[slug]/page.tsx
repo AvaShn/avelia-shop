@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Check, ShieldCheck } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
-import { PreviewAddToSelection } from "@/components/product/preview-add-to-selection";
+import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductGrid } from "@/components/product/product-grid";
 import { products } from "@/features/products/catalog";
@@ -207,13 +207,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <p className="text-muted-foreground mt-6 text-sm">
               {product.stock > 0 ? "موجود و آماده‌ی انتخاب" : "موقتاً ناموجود"}
             </p>
-            <PreviewAddToSelection
+            <AddToCartButton
+              productId={product.id}
               productName={product.name}
               isAvailable={product.stock > 0}
               className="mt-5 min-h-14 w-full"
             />
             <p className="text-muted-foreground mt-4 text-center text-xs leading-6">
-              ثبت نهایی سفارش و ادامه‌ی پرداخت در فاز خرید فعال می‌شود.
+              موجودی و قیمت هنگام ثبت سفارش دوباره بررسی می‌شود.
             </p>
           </div>
         </section>

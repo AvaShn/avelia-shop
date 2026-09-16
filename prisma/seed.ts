@@ -58,6 +58,7 @@ async function seed() {
       stock: product.stock,
       isOriginal: product.isOriginal,
       isFeatured: product.isFeatured,
+      isPublished: true,
       sortOrder: product.sortOrder,
       categoryId: product.categoryId,
     };

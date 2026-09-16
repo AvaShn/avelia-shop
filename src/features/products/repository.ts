@@ -20,6 +20,7 @@ async function readProductCollection(): Promise<readonly Product[]> {
   }
 
   const records = await prisma.product.findMany({
+    where: { isPublished: true },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
   });
 
@@ -38,7 +39,22 @@ export async function findStorefrontProductBySlug(slug: string) {
     return fallbackProducts.find((product) => product.slug === slug);
   }
 
-  const record = await prisma.product.findUnique({ where: { slug } });
+  const record = await prisma.product.findFirst({
+    where: { slug, isPublished: true },
+  });
+  return record ? databaseProductToDomain(record) : undefined;
+}
+
+export async function findStorefrontProductById(id: string) {
+  const prisma = getPrismaClient();
+
+  if (!prisma) {
+    return fallbackProducts.find((product) => product.id === id);
+  }
+
+  const record = await prisma.product.findFirst({
+    where: { id, isPublished: true },
+  });
   return record ? databaseProductToDomain(record) : undefined;
 }
 

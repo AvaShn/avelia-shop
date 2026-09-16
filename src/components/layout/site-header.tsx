@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
 
+import { CartLink } from "@/components/cart/cart-link";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { Container } from "@/components/layout/container";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
 import { SearchDialog } from "@/components/layout/search-dialog";
-import { Button } from "@/components/ui/button";
 
 const navigation = [
   { label: "صفحه اصلی", href: "/" },
@@ -44,12 +43,7 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-1">
           <SearchDialog />
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/cart" aria-label="سبد خرید، بدون محصول">
-              <ShoppingBag aria-hidden="true" />
-              <span className="sr-only">سبد خرید</span>
-            </Link>
-          </Button>
+          <CartLink />
         </div>
       </Container>
     </header>

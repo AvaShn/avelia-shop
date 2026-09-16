@@ -17,6 +17,13 @@ const serverEnvironmentSchema = z.object({
   PAYMENT_SESSION_SECRET: optionalSecret,
   PAYMENT_CARD_NUMBER: optionalSecret,
   PAYMENT_CARD_HOLDER: optionalSecret,
+  ORDER_RESERVATION_MINUTES: z.coerce
+    .number()
+    .int()
+    .min(15)
+    .max(10_080)
+    .default(1_440),
+  INVENTORY_CRON_SECRET: optionalSecret,
   SUPABASE_URL: z.url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: optionalSecret,
   SUPABASE_RECEIPTS_BUCKET: z

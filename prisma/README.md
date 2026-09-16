@@ -15,8 +15,17 @@ Vercel.
 
 The seed is repeatable: it uses upserts and does not delete orders, users, or
 payments. If `DATABASE_URL` is absent, storefront reads intentionally fall back
-to the checked-in product catalog so local UI work and production builds remain
-available before Supabase is connected.
+to the checked-in product catalog. The cart also uses a validated cookie-backed
+preview locally, so UI work remains available before Supabase is connected.
+Creating a real order always requires PostgreSQL and never falls back to browser
+prices or totals.
+
+Checkout reserves stock in the same serializable transaction that creates the
+user, order, immutable line-item prices, and pending payment. Configure
+`INVENTORY_CRON_SECRET` and schedule
+`GET /api/internal/orders/release-expired` with a matching bearer token after
+deployment so expired reservations are released. Application requests never
+run schema migrations implicitly.
 
 For schema changes during development, create a new migration with
 `pnpm db:migrate -- --name <migration-name>`. Never edit an already-applied
