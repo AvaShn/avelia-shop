@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ArrowUpLeft,
-  Camera,
-  MessageCircle,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowUpLeft, Camera, MessageCircle, ShieldCheck } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
@@ -60,11 +55,7 @@ export default function SocialPage() {
           />
           <div className="relative mx-auto max-w-2xl">
             <span className="mx-auto flex size-16 items-center justify-center rounded-full border border-white/15 bg-white/5">
-              <Camera
-                aria-hidden="true"
-                className="size-7"
-                strokeWidth={1.4}
-              />
+              <Camera aria-hidden="true" className="size-7" strokeWidth={1.4} />
             </span>
             <p className="mt-7 text-sm font-medium text-[#d7bd8c]">
               اینستاگرام رسمی

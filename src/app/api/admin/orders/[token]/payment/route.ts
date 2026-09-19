@@ -38,7 +38,9 @@ export async function POST(
       limit: 30,
       windowMs: 60_000,
     });
+
     if (!rateLimit.allowed) return apiRateLimitFailure(rateLimit, requestId);
+
     if (!isTrustedMutationOrigin(request)) {
       return apiFailure(
         403,

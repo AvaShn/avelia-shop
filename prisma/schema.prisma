@@ -46,7 +46,7 @@ model Category {
 }
 
 model Product {
-  id                 String      @id @default(cuid())
+  id                 String      @id @default(dbgenerated("gen_random_uuid()::text"))
   name               String
   slug               String      @unique
   shortDescription   String
@@ -54,7 +54,7 @@ model Product {
   brand              String
   priceRial          BigInt
   compareAtPriceRial BigInt?
-  images             Json
+  images             String[]
   keyFeatures        String[]
   usage              String
   stock              Int
@@ -67,7 +67,7 @@ model Product {
   orderItems         OrderItem[]
   cartItems          CartItem[]
   createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  updatedAt          DateTime    @default(now()) @updatedAt
 
   @@index([categoryId])
   @@index([categoryId, isPublished])

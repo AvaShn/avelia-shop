@@ -1,37 +1,40 @@
-# AVELIA database
+# AVELIA local database
 
-The schema targets PostgreSQL through Prisma ORM and is ready for Supabase and
-Vercel.
+The Prisma schema targets PostgreSQL 16. The connection string is read only
+from `DATABASE_URL`; credentials are not embedded in application or Prisma
+code.
 
-## First setup
+## Initialize the local database
 
-1. Create `.env.local` from `.env.example`.
-2. Set `DATABASE_URL` to the Supabase transaction-pooler URL used by Vercel.
-3. Set `DIRECT_URL` to the direct or session-pooler URL used by Prisma CLI.
-4. Install dependencies with `pnpm install` (this also generates Prisma Client).
-5. Apply the committed migration with `pnpm db:deploy`.
-6. Insert or update the three categories and 28 products with
-   `pnpm db:seed`.
+1. Start PostgreSQL with `docker compose up -d`.
+2. Confirm the `avelia-postgres` service is healthy with `docker compose ps`.
+3. Generate the client with `pnpm prisma generate`.
+4. Apply the committed migrations with `pnpm prisma migrate deploy`.
+5. Seed categories and products with `pnpm prisma db seed`.
+6. Verify the required tables and catalog counts with `pnpm db:verify`.
 
-The seed is repeatable: it uses upserts and does not delete orders, users, or
-payments. If `DATABASE_URL` is absent, storefront reads intentionally fall back
-to the checked-in product catalog. The cart also uses a validated cookie-backed
-preview locally, so UI work remains available before Supabase is connected.
-Creating a real order always requires PostgreSQL and never falls back to browser
-prices or totals.
+The seed uses `upsert` with the unique category and product slugs. It can be
+run repeatedly and does not delete or duplicate existing users, orders,
+payments, categories, or products.
 
-Checkout reserves stock in the same serializable transaction that creates the
-user, order, immutable line-item prices, and pending payment. Configure
-`INVENTORY_CRON_SECRET` and schedule
-`GET /api/internal/orders/release-expired` with a matching bearer token after
-deployment so expired reservations are released. Application requests never
-run schema migrations implicitly.
+## Schema development
 
-The same protected cleanup request removes expired API rate-limit windows. In
-production, rate-limit counters are stored in PostgreSQL so limits remain
-consistent across Vercel instances; local development falls back to an
-in-memory counter when no database is configured.
+After changing `prisma/schema.prisma`, create a new versioned migration:
 
-For schema changes during development, create a new migration with
-`pnpm db:migrate -- --name <migration-name>`. Never edit an already-applied
-migration.
+```bash
+pnpm prisma migrate dev --name describe_your_change
+```
+
+Never edit a migration that has already been applied. Production-style
+application requests never execute migrations implicitly.
+
+## Inspect and edit data
+
+Run `pnpm prisma studio` and open `http://localhost:5555`. Prisma Studio can
+manage `Category` and `Product` records as well as inspect carts, orders, and
+payments.
+
+The storefront uses PostgreSQL whenever `DATABASE_URL` is configured. The
+checked-in catalog remains only as a no-database UI fallback; it is not used
+when the Docker connection is available. Checkout and order creation always
+require PostgreSQL.

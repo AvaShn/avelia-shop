@@ -1,0 +1,120 @@
+BEGIN;
+
+INSERT INTO "Product" (
+  "id",
+  "name",
+  "slug",
+  "shortDescription",
+  "description",
+  "brand",
+  "priceRial",
+  "compareAtPriceRial",
+  "images",
+  "keyFeatures",
+  "usage",
+  "stock",
+  "isOriginal",
+  "isFeatured",
+  "isPublished",
+  "sortOrder",
+  "categoryId",
+  "createdAt",
+  "updatedAt"
+)
+VALUES
+  (
+    'diagnostic-product-1',
+    'محصول فرضی ۱',
+    'sample-product-1',
+    'توضیح کوتاه محصول فرضی اول',
+    'این محصول فقط برای بررسی نوع ستون‌ها و فرم درج اطلاعات در محیط توسعه ساخته شده است.',
+    'AVELIA TEST',
+    1000000,
+    NULL,
+    ARRAY['/images/home/category-makeup-v2.webp']::text[],
+    ARRAY['ویژگی آزمایشی اول', 'نمونه مخصوص محیط توسعه']::text[],
+    'این محصول آزمایشی است و روش استفاده واقعی ندارد.',
+    10,
+    true,
+    false,
+    true,
+    901,
+    'makeup',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'diagnostic-product-2',
+    'محصول فرضی ۲',
+    'sample-product-2',
+    'توضیح کوتاه محصول فرضی دوم',
+    'این رکورد حالت قیمت قبل از تخفیف را نیز برای کنترل ستون اختیاری آزمایش می‌کند.',
+    'AVELIA TEST',
+    2000000,
+    2500000,
+    ARRAY['/images/home/category-skincare.webp']::text[],
+    ARRAY['دارای قیمت مقایسه‌ای', 'نمونه مخصوص محیط توسعه']::text[],
+    'این محصول آزمایشی است و روش استفاده واقعی ندارد.',
+    20,
+    true,
+    true,
+    true,
+    902,
+    'skincare',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'diagnostic-product-3',
+    'محصول فرضی ۳',
+    'sample-product-3',
+    'توضیح کوتاه محصول فرضی سوم',
+    'این رکورد برای کنترل دسته‌بندی رایحه و مقدار صفر موجودی در محیط توسعه ساخته شده است.',
+    'AVELIA TEST',
+    3000000,
+    NULL,
+    ARRAY['/images/home/category-fragrance.webp']::text[],
+    ARRAY['موجودی صفر', 'نمونه مخصوص محیط توسعه']::text[],
+    'این محصول آزمایشی است و روش استفاده واقعی ندارد.',
+    0,
+    false,
+    false,
+    true,
+    903,
+    'fragrance',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  )
+ON CONFLICT ("slug") DO UPDATE SET
+  "name" = EXCLUDED."name",
+  "shortDescription" = EXCLUDED."shortDescription",
+  "description" = EXCLUDED."description",
+  "brand" = EXCLUDED."brand",
+  "priceRial" = EXCLUDED."priceRial",
+  "compareAtPriceRial" = EXCLUDED."compareAtPriceRial",
+  "images" = EXCLUDED."images",
+  "keyFeatures" = EXCLUDED."keyFeatures",
+  "usage" = EXCLUDED."usage",
+  "stock" = EXCLUDED."stock",
+  "isOriginal" = EXCLUDED."isOriginal",
+  "isFeatured" = EXCLUDED."isFeatured",
+  "isPublished" = EXCLUDED."isPublished",
+  "sortOrder" = EXCLUDED."sortOrder",
+  "categoryId" = EXCLUDED."categoryId",
+  "updatedAt" = CURRENT_TIMESTAMP;
+
+COMMIT;
+
+SELECT
+  "name",
+  "slug",
+  pg_typeof("slug") AS "slugType",
+  "priceRial",
+  "stock",
+  "isOriginal",
+  "isFeatured",
+  "isPublished",
+  "categoryId"
+FROM "Product"
+WHERE "slug" IN ('sample-product-1', 'sample-product-2', 'sample-product-3')
+ORDER BY "sortOrder";

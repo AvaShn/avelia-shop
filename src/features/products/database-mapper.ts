@@ -2,14 +2,7 @@ import { z } from "zod";
 
 import { productCategoryIds, type Product } from "@/features/products/types";
 
-const productImagesSchema = z
-  .array(
-    z.object({
-      src: z.string().trim().min(1),
-      alt: z.string().trim().min(1),
-    }),
-  )
-  .min(1);
+const productImagePathsSchema = z.array(z.string().trim().min(1)).min(1);
 
 const productCategorySchema = z.enum(productCategoryIds);
 
@@ -47,6 +40,8 @@ function bigintToSafeNumber(value: bigint, fieldName: string) {
 export function databaseProductToDomain(
   record: DatabaseProductRecord,
 ): Product {
+  const imagePaths = productImagePathsSchema.parse(record.images);
+
   return {
     id: record.id,
     slug: record.slug,
@@ -66,6 +61,12 @@ export function databaseProductToDomain(
     isOriginal: record.isOriginal,
     isFeatured: record.isFeatured,
     sortOrder: record.sortOrder,
-    images: productImagesSchema.parse(record.images),
+    images: imagePaths.map((src, index) => ({
+      src,
+      alt:
+        index === 0
+          ? `تصویر ${record.name}`
+          : `تصویر ${index + 1} از ${record.name}`,
+    })),
   };
 }

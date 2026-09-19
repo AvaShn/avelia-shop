@@ -38,7 +38,27 @@ const apiSecurityMigration = readFileSync(
   ),
   "utf8",
 );
-const migrations = `${initialMigration}\n${cartCheckoutMigration}\n${apiSecurityMigration}`;
+const productDataIntegrityMigration = readFileSync(
+  join(
+    projectPath,
+    "prisma",
+    "migrations",
+    "20260916170000_product_data_integrity",
+    "migration.sql",
+  ),
+  "utf8",
+);
+const productImagePathsMigration = readFileSync(
+  join(
+    projectPath,
+    "prisma",
+    "migrations",
+    "20260916180000_product_image_paths",
+    "migration.sql",
+  ),
+  "utf8",
+);
+const migrations = `${initialMigration}\n${cartCheckoutMigration}\n${apiSecurityMigration}\n${productDataIntegrityMigration}\n${productImagePathsMigration}`;
 
 describe("Prisma database contract", () => {
   it.each([
@@ -69,6 +89,31 @@ describe("Prisma database contract", () => {
     expect(migrations).toContain('"Product_stock_nonnegative"');
     expect(migrations).toContain('"OrderItem_quantity_positive"');
     expect(migrations).toContain('"CartItem_quantity_positive"');
+    expect(migrations).toContain('"Product_priceRial_toman_compatible"');
+    expect(migrations).toContain(
+      '"Product_compareAtPriceRial_toman_compatible"',
+    );
+  });
+
+  it("protects direct product entry from incomplete storefront records", () => {
+    expect(schema).toContain(
+      'id                 String      @id @default(dbgenerated("gen_random_uuid()::text"))',
+    );
+    expect(schema).toContain(
+      "updatedAt          DateTime    @default(now()) @updatedAt",
+    );
+    expect(productDataIntegrityMigration).toContain('"Product_slug_format"');
+    expect(schema).toContain("images             String[]");
+    expect(productImagePathsMigration).toContain(
+      'DROP CONSTRAINT "Product_images_nonempty_array"',
+    );
+    expect(productImagePathsMigration).toContain(
+      'ALTER COLUMN "images" TYPE TEXT[]',
+    );
+    expect(productImagePathsMigration).toContain('"Product_images_nonempty"');
+    expect(productDataIntegrityMigration).toContain(
+      '"Product_keyFeatures_nonempty"',
+    );
   });
 
   it("defines exact order and payment states", () => {

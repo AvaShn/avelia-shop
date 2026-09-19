@@ -7,15 +7,16 @@ import { productCategories, products } from "../src/features/products/catalog";
 loadEnvironment({ path: ".env.local" });
 loadEnvironment();
 
-const databaseUrl = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "Set DIRECT_URL or DATABASE_URL before running the AVELIA database seed.",
-  );
+  throw new Error("Set DATABASE_URL before running the AVELIA database seed.");
 }
 
-const adapter = new PrismaPg({ connectionString: databaseUrl });
+const adapter = new PrismaPg({
+  connectionString: databaseUrl,
+  connectionTimeoutMillis: 5_000,
+});
 const prisma = new PrismaClient({ adapter });
 
 const categoryImages = {
@@ -52,7 +53,7 @@ async function seed() {
         product.compareAtPriceRial === undefined
           ? null
           : BigInt(product.compareAtPriceRial),
-      images: product.images.map((image) => ({ ...image })),
+      images: product.images.map((image) => image.src),
       keyFeatures: [...product.keyFeatures],
       usage: product.usage,
       stock: product.stock,

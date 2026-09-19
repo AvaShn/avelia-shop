@@ -4,8 +4,13 @@ import { defineConfig } from "prisma/config";
 loadEnvironment({ path: ".env.local" });
 loadEnvironment();
 
-const localGenerationUrl =
-  "postgresql://postgres:postgres@localhost:5432/avelia?schema=public";
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error(
+    "DATABASE_URL is required. Copy .env.example to .env.local before running Prisma commands.",
+  );
+}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -14,7 +19,6 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url:
-      process.env.DIRECT_URL ?? process.env.DATABASE_URL ?? localGenerationUrl,
+    url: databaseUrl,
   },
 });

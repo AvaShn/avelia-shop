@@ -17,7 +17,6 @@ const serverEnvironmentSchema = z.object({
     .enum(["development", "test", "production"])
     .default("development"),
   DATABASE_URL: optionalSecret,
-  DIRECT_URL: optionalSecret,
   TELEGRAM_BOT_TOKEN: optionalSecret,
   TELEGRAM_BOT_USERNAME: optionalSecret,
   TELEGRAM_ADMIN_ID: optionalSecret,

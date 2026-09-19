@@ -21,16 +21,17 @@ const databaseProduct: DatabaseProductRecord = {
   isOriginal: true,
   isFeatured: false,
   sortOrder: 1,
-  images: [{ src: "/product.webp", alt: "تصویر محصول" }],
+  images: ["/product.webp"],
 };
 
 describe("database product mapper", () => {
-  it("maps PostgreSQL bigint and JSON values to the storefront model", () => {
+  it("maps PostgreSQL bigint and image paths to the storefront model", () => {
     const product = databaseProductToDomain(databaseProduct);
 
     expect(product.priceRial).toBe(12_000_000);
     expect(product.compareAtPriceRial).toBe(15_000_000);
     expect(product.images[0]?.src).toBe("/product.webp");
+    expect(product.images[0]?.alt).toBe("تصویر محصول تست");
   });
 
   it("rejects unknown categories and malformed image data", () => {

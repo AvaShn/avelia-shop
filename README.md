@@ -1,16 +1,120 @@
 # AVELIA
 
-AVELIA is a mobile-first Persian RTL beauty ecommerce experience for makeup,
-skincare, and fragrance, built with Next.js 15.
+AVELIA is a mobile-first Persian RTL beauty ecommerce application built with
+Next.js 15, Prisma ORM, and PostgreSQL.
 
-## Local development
+## Local architecture
 
-1. Copy `.env.example` to `.env.local`.
-2. For database-backed products, set the Supabase `DATABASE_URL` and
-   `DIRECT_URL` values described in `prisma/README.md`.
-3. Install dependencies with `pnpm install`.
-4. Run `pnpm db:deploy` and `pnpm db:seed` after connecting Supabase.
-5. Start the development server with `pnpm dev`.
+```text
+Browser → Next.js localhost → Prisma ORM → PostgreSQL Docker container
+```
+
+The local database runs as the `avelia-postgres` container and persists its
+data in the named `avelia_postgres_data` Docker volume.
+
+## Prerequisites
+
+- Node.js 20.19 or newer
+- pnpm 11
+- Docker Desktop with Docker Compose
+
+## First-time local setup
+
+The repository includes local `.env` and `.env.local` files. If they are
+missing after a fresh clone, copy `.env.example` to both filenames and replace
+the example password consistently in `POSTGRES_PASSWORD` and `DATABASE_URL`:
+
+```powershell
+Copy-Item .env.example .env
+Copy-Item .env.example .env.local
+```
+
+Install dependencies and generate Prisma Client:
+
+```bash
+pnpm install
+pnpm prisma generate
+```
+
+Start PostgreSQL and wait until its health status is `healthy`:
+
+```bash
+docker compose up -d
+docker compose ps
+docker ps
+```
+
+Apply the committed migrations and seed the catalog:
+
+```bash
+pnpm prisma migrate deploy
+pnpm prisma db seed
+pnpm db:verify
+```
+
+The seed is repeatable. It upserts categories and products by unique slug, so
+running it more than once updates the catalog without creating duplicates.
+The verification command checks the six required core tables and reports the
+seeded category and product counts through Prisma Client.
+
+Start the application:
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). With `DATABASE_URL`
+configured, product pages and `/api/products` read through the repository and
+Prisma layers from PostgreSQL.
+
+## Everyday database commands
+
+Start the database:
+
+```bash
+docker compose up -d
+```
+
+Stop the container while keeping local data:
+
+```bash
+docker compose down
+```
+
+Apply existing migrations:
+
+```bash
+pnpm prisma migrate deploy
+```
+
+Create and apply a migration while developing a schema change:
+
+```bash
+pnpm prisma migrate dev --name describe_your_change
+```
+
+Seed or refresh the catalog:
+
+```bash
+pnpm prisma db seed
+```
+
+Open Prisma Studio:
+
+```bash
+pnpm prisma studio
+```
+
+Prisma Studio opens at `http://localhost:5555` by default. Select `Product` to
+view, add, edit, or delete local products. Use an existing `Category` relation,
+store prices as whole rials in `priceRial`, keep stock non-negative, and provide
+at least one image path in the `images` text array. The exact field types and
+safe entry values are documented in
+[`docs/PRODUCT_DATA_ENTRY.md`](docs/PRODUCT_DATA_ENTRY.md).
+
+To remove the database and all local records as well as the container, use
+`docker compose down --volumes`. This is destructive and is not part of the
+normal stop flow.
 
 ## Quality checks
 
@@ -20,22 +124,11 @@ skincare, and fragrance, built with Next.js 15.
 - `pnpm build`
 - `pnpm test:e2e` after `pnpm build` and installing Playwright Chromium
 
-## Delivery status
+## Project status
 
-Phase 1 establishes the application foundation. Phase 2 adds AVELIA's design
-system and shared UI primitives. Phase 3 delivers the complete premium beauty
-homepage. Phase 4 adds a typed 28-item cosmetics catalog (including the 19
-provided product assets), search, category and discount filters, sorting,
-discount pricing, product galleries, detailed product pages, related products,
-metadata, structured data, and a sitemap. Phase 5 adds the PostgreSQL schema,
-Prisma client and versioned migrations, repeatable catalog seed,
-database-backed storefront repositories, and typed product APIs. Phase 6 adds
-persistent anonymous carts, responsive cart and checkout pages, server-side
-price and stock verification, transactional order creation, idempotency,
-inventory reservations, public order tracking, and the Telegram continuation
-link. Phase 7 completes the typed API layer: cursor-based product APIs, exact
-cart and order contracts, expiring Telegram handoff and verified webhook,
-private receipt storage, authenticated admin order review, shared response
-envelopes, request-size limits, CSRF checks, and database-backed rate limiting.
-
-API setup and contracts are documented in [`docs/API.md`](docs/API.md).
+The application includes the premium Persian storefront, catalog and product
+pages, discounts, persistent cart and checkout, transactional orders,
+inventory reservations, Telegram receipt workflow, public order tracking, and
+protected admin review APIs. API setup and contracts are documented in
+[`docs/API.md`](docs/API.md), and database details are documented in
+[`prisma/README.md`](prisma/README.md).
