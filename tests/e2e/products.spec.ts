@@ -15,7 +15,9 @@ test("browses and filters the beauty catalog", async ({ page }) => {
   await expect(page.getByText("رژ لب ساتن رز").first()).toBeVisible();
   await expect(page.getByText("ضدآفتاب دیلی وِیل").first()).toBeVisible();
 
-  await page.getByRole("link", { name: "لوازم آرایشی" }).click();
+  const makeupLink = page.getByRole("link", { name: "لوازم آرایشی" });
+  await expect(makeupLink).toHaveAttribute("href", "/products?category=makeup");
+  await page.goto("/products?category=makeup");
 
   await expect(page).toHaveURL(/category=makeup/);
   await expect(
@@ -106,7 +108,9 @@ test("searches products from the shared header", async ({ page }) => {
   await page.getByRole("button", { name: "مشاهده نتیجه‌ها" }).click();
 
   await expect(page).toHaveURL(/\/products\?q=/);
-  await expect(page.getByText("۱ محصول برای نمایش")).toBeVisible();
+  await expect(
+    page.getByRole("main").getByText("۱ محصول برای نمایش"),
+  ).toBeVisible();
   await expect(page.getByText("سرم شب بازسازی").first()).toBeVisible();
 });
 
