@@ -17,12 +17,12 @@ export function CategoriesSection() {
             <SectionHeading
               eyebrow="مجموعه‌ها"
               title="هر انتخاب، بخشی از آیین زیبایی شما"
-              description="آرایش، مراقبت پوست و عطر؛ سه مجموعه‌ی دقیق برای انتخابی مطمئن‌تر."
+              description="آرایش، مراقبت پوست و عطر؛ سه مجموعه‌ی دقیق برای انتخابی مطمئن‌تر.
+                            هر محصول با نگاه دقیق به اصالت، کیفیت، کاربرد و تجربه‌ی واقعی انتخاب شده است.
+
+              "
             />
-            <p className="text-muted-foreground max-w-sm text-sm leading-7 lg:text-end">
-              هر محصول با نگاه دقیق به اصالت، کیفیت، کاربرد و تجربه‌ی واقعی
-              انتخاب شده است.
-            </p>
+    
           </div>
 
           <div className="-mx-5 mt-12 grid snap-x snap-mandatory [scrollbar-width:none] auto-cols-[86%] grid-flow-col gap-4 overflow-x-auto px-5 pb-3 sm:-mx-8 sm:auto-cols-[56%] sm:px-8 lg:mx-0 lg:grid-flow-row lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
