@@ -60,12 +60,12 @@ function mapSummary(order: {
   publicToken: string;
   status: "PENDING_PAYMENT" | "WAITING_REVIEW" | "PAID" | "REJECTED";
   totalPriceRial: bigint;
+  recipientName: string;
+  recipientPhoneNormalized: string;
+  recipientEmail: string;
   createdAt: Date;
   updatedAt: Date;
   user: {
-    name: string;
-    phoneNormalized: string;
-    email: string | null;
     telegramId: string | null;
   };
   payment: {
@@ -83,9 +83,9 @@ function mapSummary(order: {
     status: order.status,
     paymentStatus: order.payment.status,
     customer: {
-      name: order.user.name,
-      phone: order.user.phoneNormalized,
-      email: order.user.email,
+      name: order.recipientName,
+      phone: order.recipientPhoneNormalized,
+      email: order.recipientEmail,
       telegramConnected: Boolean(order.user.telegramId),
     },
     totalPriceRial,
@@ -141,14 +141,16 @@ export async function listAdminOrders(query: AdminOrdersQuery) {
               publicToken: { contains: query.q, mode: "insensitive" as const },
             },
             {
-              user: {
-                name: { contains: query.q, mode: "insensitive" as const },
+              recipientName: {
+                contains: query.q,
+                mode: "insensitive" as const,
               },
             },
-            { user: { phoneNormalized: { contains: query.q } } },
+            { recipientPhoneNormalized: { contains: query.q } },
             {
-              user: {
-                email: { contains: query.q, mode: "insensitive" as const },
+              recipientEmail: {
+                contains: query.q,
+                mode: "insensitive" as const,
               },
             },
           ],
@@ -220,6 +222,13 @@ export async function getAdminOrder(publicToken: string) {
     inventoryCommittedAt: order.inventoryCommittedAt?.toISOString() ?? null,
     inventoryReleasedAt: order.inventoryReleasedAt?.toISOString() ?? null,
     rejectionReason: order.rejectionReason,
+    delivery: {
+      city: order.shippingCity,
+      addressLine: order.shippingAddressLine,
+      postalCode: order.shippingPostalCode,
+      plaque: order.shippingPlaque,
+      unit: order.shippingUnit,
+    },
     receiptPath: summary.receiptAvailable
       ? `/api/admin/orders/${encodeURIComponent(publicToken)}/receipt`
       : null,

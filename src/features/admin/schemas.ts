@@ -67,6 +67,13 @@ export const adminOrderDetailSchema = adminOrderSummarySchema.extend({
   inventoryCommittedAt: z.string().datetime().nullable(),
   inventoryReleasedAt: z.string().datetime().nullable(),
   rejectionReason: z.string().nullable(),
+  delivery: z.object({
+    city: z.string(),
+    addressLine: z.string(),
+    postalCode: z.string(),
+    plaque: z.string(),
+    unit: z.string().nullable(),
+  }),
   receiptPath: z.string().nullable(),
   review: z.object({
     reviewedAt: z.string().datetime().nullable(),
@@ -74,3 +81,6 @@ export const adminOrderDetailSchema = adminOrderSummarySchema.extend({
     note: z.string().nullable(),
   }),
 });
+
+export type AdminOrderSummary = z.infer<typeof adminOrderSummarySchema>;
+export type AdminOrderDetail = z.infer<typeof adminOrderDetailSchema>;
