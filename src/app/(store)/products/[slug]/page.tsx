@@ -7,7 +7,6 @@ import { Container } from "@/components/layout/container";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductGrid } from "@/components/product/product-grid";
-import { products } from "@/features/products/catalog";
 import { getProductCategory } from "@/features/products/queries";
 import {
   findStorefrontProductBySlug,
@@ -20,9 +19,9 @@ type ProductPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return products.map((product) => ({ slug: product.slug }));
-}
+// Product inventory is managed in PostgreSQL. Rendering dynamically keeps newly
+// published database products available without requiring a new deployment.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
