@@ -1,9 +1,13 @@
 import { z } from "zod";
 
-import { checkoutCustomerSchema } from "@/features/orders/customer";
+import {
+  checkoutCustomerSchema,
+  shippingAddressSchema,
+} from "@/features/orders/customer";
 
 export const createOrderSchema = z.object({
   customer: checkoutCustomerSchema,
+  shippingAddress: shippingAddressSchema,
 });
 
 export const idempotencyKeySchema = z

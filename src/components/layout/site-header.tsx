@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AccountLink } from "@/components/account/account-link";
 import { CartLink } from "@/components/cart/cart-link";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { Container } from "@/components/layout/container";
@@ -42,6 +43,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-1">
+          <AccountLink />
           <SearchDialog />
           <CartLink />
         </div>

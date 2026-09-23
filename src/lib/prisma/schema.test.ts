@@ -58,11 +58,32 @@ const productImagePathsMigration = readFileSync(
   ),
   "utf8",
 );
-const migrations = `${initialMigration}\n${cartCheckoutMigration}\n${apiSecurityMigration}\n${productDataIntegrityMigration}\n${productImagePathsMigration}`;
+const customerAccountsShippingMigration = readFileSync(
+  join(
+    projectPath,
+    "prisma",
+    "migrations",
+    "20260923113000_customer_accounts_shipping",
+    "migration.sql",
+  ),
+  "utf8",
+);
+const safeUserDeletionMigration = readFileSync(
+  join(
+    projectPath,
+    "prisma",
+    "migrations",
+    "20260923160000_safe_user_deletion",
+    "migration.sql",
+  ),
+  "utf8",
+);
+const migrations = `${initialMigration}\n${cartCheckoutMigration}\n${apiSecurityMigration}\n${productDataIntegrityMigration}\n${productImagePathsMigration}\n${customerAccountsShippingMigration}\n${safeUserDeletionMigration}`;
 
 describe("Prisma database contract", () => {
   it.each([
     "User",
+    "UserSession",
     "Category",
     "Product",
     "Cart",
@@ -132,6 +153,54 @@ describe("Prisma database contract", () => {
     expect(schema).toContain("providerUpdateId");
     expect(schema).toContain("receiptObjectKey");
     expect(schema).not.toContain("receiptImage");
+  });
+
+  it("stores customer credentials as hashes and uses revocable sessions", () => {
+    expect(schema).toContain("passwordHash");
+    expect(schema).toContain("tokenHash String   @unique");
+    expect(schema).toContain("@@index([userId, expiresAt])");
+    expect(schema).toContain("@@index([expiresAt])");
+    expect(customerAccountsShippingMigration).toContain(
+      'CREATE TABLE "UserSession"',
+    );
+    expect(customerAccountsShippingMigration).toContain(
+      "ON DELETE CASCADE ON UPDATE CASCADE",
+    );
+  });
+
+  it("keeps an immutable recipient and delivery snapshot on every order", () => {
+    for (const field of [
+      "recipientName",
+      "recipientPhoneNormalized",
+      "recipientEmail",
+      "shippingCity",
+      "shippingAddressLine",
+      "shippingPostalCode",
+      "shippingPlaque",
+      "shippingUnit",
+    ]) {
+      expect(schema).toContain(field);
+      expect(customerAccountsShippingMigration).toContain(`"${field}"`);
+    }
+
+    expect(schema).toContain("defaultAddressLine");
+    expect(schema).toContain("defaultPostalCode");
+  });
+
+  it("deletes a customer safely without leaking reservations or carts", () => {
+    expect(schema).toMatch(
+      /user\s+User\s+@relation\(fields: \[userId\], references: \[id\], onDelete: Cascade\)/,
+    );
+    expect(safeUserDeletionMigration).toContain("ON DELETE CASCADE");
+    expect(safeUserDeletionMigration).toContain(
+      "restore_inventory_before_order_delete",
+    );
+    expect(safeUserDeletionMigration).toContain(
+      'OLD."inventoryCommittedAt" IS NULL',
+    );
+    expect(safeUserDeletionMigration).toContain(
+      "delete_order_cart_after_order_delete",
+    );
   });
 
   it("tracks inventory reservation lifecycle and review audit data", () => {

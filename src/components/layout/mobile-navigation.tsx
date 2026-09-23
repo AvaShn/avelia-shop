@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 
 const mobileNavigation = [
+  { label: "ورود / ثبت‌نام", href: "/account" },
   { label: "صفحه اصلی", href: "/" },
   { label: "همه محصولات", href: "/products" },
   { label: "تخفیف‌های منتخب", href: "/#offers" },

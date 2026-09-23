@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   checkoutCustomerSchema,
   normalizeIranianMobile,
+  shippingAddressSchema,
 } from "@/features/orders/customer";
 
 describe("checkout customer validation", () => {
@@ -30,5 +31,18 @@ describe("checkout customer validation", () => {
         "ایمیل واردشده معتبر نیست.",
       ]),
     );
+  });
+
+  it("normalizes Persian postal-code digits and validates delivery details", () => {
+    const result = shippingAddressSchema.parse({
+      city: "تهران",
+      addressLine: "خیابان ولیعصر، کوچه آفتاب",
+      postalCode: "۱۲۳۴۵-۶۷۸۹۰",
+      plaque: "۱۲",
+      unit: "",
+    });
+
+    expect(result.postalCode).toBe("1234567890");
+    expect(result.unit).toBeUndefined();
   });
 });

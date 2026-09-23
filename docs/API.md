@@ -23,8 +23,14 @@ are never serialized directly.
 - `POST /api/cart`: add `{ productId, quantity }`.
 - `PATCH /api/cart/[productId]`: set `{ quantity }`.
 - `DELETE /api/cart/[productId]`: remove one product.
-- `POST /api/orders`: create an order from server-repriced cart contents. A
-  valid `Idempotency-Key` header is required.
+- `POST /api/auth/register`: create a customer account and revocable session.
+- `POST /api/auth/login`: sign in with email or normalized Iranian mobile.
+- `GET /api/auth/session`: return the signed-in customer profile.
+- `DELETE /api/auth/session`: revoke the current customer session.
+- `GET /api/account/orders`: authenticated cursor-paginated order history.
+- `POST /api/orders`: authenticated checkout from server-repriced cart
+  contents. A valid `Idempotency-Key` header plus recipient and complete
+  delivery-address data are required.
 - `GET /api/orders/[token]`: customer-safe order status with no internal IDs or
   customer details.
 - `POST /api/telegram/session`: create an expiring handoff from
@@ -49,7 +55,7 @@ note? }` using the defined state transitions.
 Generate the password hash before deployment:
 
 ```powershell
-pnpm admin:hash-password -- "a-long-unique-password"
+npm run admin:hash-password -- "a-long-unique-password"
 ```
 
 Place the result in `ADMIN_PASSWORD_HASH`, set the matching `ADMIN_EMAIL`, and
@@ -74,4 +80,7 @@ Configure Telegram's webhook URL as
 - Sensitive routes are rate-limited; production counters use PostgreSQL.
 - Receipt webhook updates and checkout requests are idempotent.
 - Diagnostic details stay in server logs and are correlated by `requestId`.
-- Database migrations are applied only through `pnpm db:deploy`.
+- Customer passwords use salted scrypt hashes; opaque session tokens are stored
+  only as hashes and are revocable through logout.
+- Every order keeps an immutable recipient and delivery-address snapshot.
+- Database migrations are applied only through `npm run db:deploy`.

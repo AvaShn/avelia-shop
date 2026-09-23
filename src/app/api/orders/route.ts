@@ -3,6 +3,10 @@ import { randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
 
 import {
+  AccountAuthError,
+  readCustomerSession,
+} from "@/features/account/auth";
+import {
   clearCartSession,
   readCartRequestSession,
 } from "@/features/cart/session";
@@ -36,7 +40,11 @@ function orderErrorResponse(
   requestId: string,
   rateLimit: RateLimitResult,
 ) {
-  if (error instanceof OrderServiceError || error instanceof ApiRequestError) {
+  if (
+    error instanceof OrderServiceError ||
+    error instanceof ApiRequestError ||
+    error instanceof AccountAuthError
+  ) {
     return apiFailure(
       error.status,
       { code: error.code, message: error.message },
@@ -76,6 +84,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const accountSession = await readCustomerSession(request);
     const idempotencyKey = idempotencyKeySchema.safeParse(
       request.headers.get("Idempotency-Key"),
     );
@@ -86,7 +95,7 @@ export async function POST(request: NextRequest) {
         400,
         {
           code: "INVALID_REQUEST",
-          message: "اطلاعات تماس را بررسی و دوباره تلاش کنید.",
+          message: "اطلاعات تماس و نشانی تحویل را بررسی کنید.",
           ...(parsedBody.success
             ? {}
             : { fieldErrors: parsedBody.error.flatten().fieldErrors }),
@@ -98,9 +107,11 @@ export async function POST(request: NextRequest) {
     const cartSession = readCartRequestSession(request);
     const order = publicOrderSchema.parse(
       await createOrderFromCart({
+        userId: accountSession.userId,
         cartToken: cartSession.token,
         idempotencyKey: idempotencyKey.data,
         customer: parsedBody.data.customer,
+        shippingAddress: parsedBody.data.shippingAddress,
       }),
     );
     const response = apiSuccess(order, {

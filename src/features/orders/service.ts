@@ -5,7 +5,10 @@ import {
   CheckoutPricingError,
   createCheckoutPricingSnapshot,
 } from "@/features/orders/checkout-pricing";
-import type { CheckoutCustomer } from "@/features/orders/customer";
+import type {
+  CheckoutCustomer,
+  ShippingAddress,
+} from "@/features/orders/customer";
 import type { OrderApiErrorCode, PublicOrder } from "@/features/orders/types";
 import { serverEnvironment } from "@/lib/env/server";
 import { getPrismaClient } from "@/lib/prisma/client";
@@ -27,9 +30,11 @@ export class OrderServiceError extends Error {
 }
 
 type CreateOrderInput = {
+  userId: string;
   cartToken: string;
   idempotencyKey: string;
   customer: CheckoutCustomer;
+  shippingAddress: ShippingAddress;
 };
 
 function safeBigIntToNumber(value: bigint, field: string) {
@@ -136,8 +141,15 @@ export async function createOrderFromCart(input: CreateOrderInput) {
   const idempotencyHash = hashToken(input.idempotencyKey);
   const existingOrder = await prisma.order.findUnique({
     where: { checkoutIdempotencyKeyHash: idempotencyHash },
-    select: { publicToken: true },
+    select: { publicToken: true, userId: true },
   });
+  if (existingOrder && existingOrder.userId !== input.userId) {
+    throw new OrderServiceError(
+      "UNAUTHORIZED",
+      "این درخواست به حساب کاربری شما تعلق ندارد.",
+      403,
+    );
+  }
   const reservationExpiresAt = new Date(
     Date.now() + serverEnvironment.ORDER_RESERVATION_MINUTES * 60 * 1000,
   );
@@ -155,19 +167,37 @@ export async function createOrderFromCart(input: CreateOrderInput) {
         async (transaction) => {
           const duplicate = await transaction.order.findUnique({
             where: { checkoutIdempotencyKeyHash: idempotencyHash },
-            select: { publicToken: true },
+            select: { publicToken: true, userId: true },
           });
-          if (duplicate) return duplicate.publicToken;
+          if (duplicate) {
+            if (duplicate.userId !== input.userId) {
+              throw new OrderServiceError(
+                "UNAUTHORIZED",
+                "این درخواست به حساب کاربری شما تعلق ندارد.",
+                403,
+              );
+            }
+            return duplicate.publicToken;
+          }
 
           const cart = await transaction.cart.findUnique({
             where: { tokenHash: hashToken(input.cartToken) },
             include: {
-              order: { select: { publicToken: true } },
+              order: { select: { publicToken: true, userId: true } },
               items: true,
             },
           });
 
-          if (cart?.order) return cart.order.publicToken;
+          if (cart?.order) {
+            if (cart.order.userId !== input.userId) {
+              throw new OrderServiceError(
+                "UNAUTHORIZED",
+                "این سبد قبلاً با حساب دیگری ثبت شده است.",
+                403,
+              );
+            }
+            return cart.order.publicToken;
+          }
           if (
             !cart ||
             cart.checkedOutAt ||
@@ -231,16 +261,29 @@ export async function createOrderFromCart(input: CreateOrderInput) {
             }
           }
 
-          const user = await transaction.user.upsert({
-            where: { phoneNormalized: input.customer.phone },
-            create: {
+          const account = await transaction.user.findUnique({
+            where: { id: input.userId },
+            select: { id: true, passwordHash: true },
+          });
+          if (!account?.passwordHash) {
+            throw new OrderServiceError(
+              "UNAUTHORIZED",
+              "برای ثبت سفارش دوباره وارد حساب کاربری شوید.",
+              401,
+            );
+          }
+
+          await transaction.user.update({
+            where: { id: account.id },
+            data: {
               name: input.customer.name,
               phoneNormalized: input.customer.phone,
-              email: input.customer.email ?? null,
-            },
-            update: {
-              name: input.customer.name,
-              ...(input.customer.email ? { email: input.customer.email } : {}),
+              email: input.customer.email,
+              defaultCity: input.shippingAddress.city,
+              defaultAddressLine: input.shippingAddress.addressLine,
+              defaultPostalCode: input.shippingAddress.postalCode,
+              defaultPlaque: input.shippingAddress.plaque,
+              defaultUnit: input.shippingAddress.unit ?? null,
             },
           });
 
@@ -248,9 +291,17 @@ export async function createOrderFromCart(input: CreateOrderInput) {
             data: {
               publicToken: nextPublicToken,
               checkoutIdempotencyKeyHash: idempotencyHash,
-              userId: user.id,
+              userId: account.id,
               cartId: cart.id,
               totalPriceRial: pricingSnapshot.totalPriceRial,
+              recipientName: input.customer.name,
+              recipientPhoneNormalized: input.customer.phone,
+              recipientEmail: input.customer.email,
+              shippingCity: input.shippingAddress.city,
+              shippingAddressLine: input.shippingAddress.addressLine,
+              shippingPostalCode: input.shippingAddress.postalCode,
+              shippingPlaque: input.shippingAddress.plaque,
+              shippingUnit: input.shippingAddress.unit ?? null,
               inventoryReservationExpiresAt: reservationExpiresAt,
               items: {
                 create: pricingSnapshot.lines.map((item) => ({
@@ -288,9 +339,24 @@ export async function createOrderFromCart(input: CreateOrderInput) {
               { cart: { tokenHash: hashToken(input.cartToken) } },
             ],
           },
-          select: { publicToken: true },
+          select: { publicToken: true, userId: true },
         });
-        if (duplicate) publicToken = duplicate.publicToken;
+        if (duplicate) {
+          if (duplicate.userId !== input.userId) {
+            throw new OrderServiceError(
+              "UNAUTHORIZED",
+              "این سفارش به حساب کاربری شما تعلق ندارد.",
+              403,
+            );
+          }
+          publicToken = duplicate.publicToken;
+        } else {
+          throw new OrderServiceError(
+            "PROFILE_CONFLICT",
+            "این ایمیل یا شماره موبایل به حساب دیگری تعلق دارد.",
+            409,
+          );
+        }
       }
 
       if (!publicToken) throw error;

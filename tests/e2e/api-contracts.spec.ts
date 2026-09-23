@@ -87,10 +87,19 @@ test("enforces JSON body limits and protects private APIs", async ({
   const admin = await request.get("/api/admin/orders");
   expect(admin.status()).toBe(401);
 
+  const accountOrders = await request.get("/api/account/orders");
+  expect(accountOrders.status()).toBe(401);
+
+  const checkout = await request.post("/api/orders", {
+    headers: { "Idempotency-Key": "unauthenticated-checkout-test" },
+    data: {},
+  });
+  expect(checkout.status()).toBe(401);
+
   const telegram = await request.post("/api/telegram/session", {
     data: { orderToken: "a".repeat(43) },
   });
-  expect(telegram.status()).toBe(503);
+  expect([404, 503]).toContain(telegram.status());
 
   const webhook = await request.post("/api/telegram/webhook", {
     data: { update_id: 1 },

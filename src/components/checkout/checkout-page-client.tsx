@@ -1,40 +1,100 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, CheckCircle2, LoaderCircle } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  LoaderCircle,
+  LogIn,
+  MapPin,
+} from "lucide-react";
 
+import { TelegramHandoffButton } from "@/components/checkout/telegram-handoff-button";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingState } from "@/components/ui/loading-state";
-import { TelegramHandoffButton } from "@/components/checkout/telegram-handoff-button";
+import type { AccountUser } from "@/features/account/schemas";
 import { useCart } from "@/features/cart/cart-provider";
 import type {
   CreateOrderApiResponse,
   PublicOrder,
 } from "@/features/orders/types";
+import type { ApiEnvelope } from "@/lib/api/contracts";
 import { formatPriceRial } from "@/lib/pricing/format-price";
 
-type CustomerForm = {
-  name: string;
-  phone: string;
-  email: string;
+type CustomerForm = { name: string; phone: string; email: string };
+type ShippingAddressForm = {
+  city: string;
+  addressLine: string;
+  postalCode: string;
+  plaque: string;
+  unit: string;
+};
+
+const emptyCustomer: CustomerForm = { name: "", phone: "", email: "" };
+const emptyAddress: ShippingAddressForm = {
+  city: "",
+  addressLine: "",
+  postalCode: "",
+  plaque: "",
+  unit: "",
 };
 
 export function CheckoutPageClient() {
   const { cart, isLoading, refreshCart, clearCartAfterCheckout } = useCart();
-  const [customer, setCustomer] = useState<CustomerForm>({
-    name: "",
-    phone: "",
-    email: "",
-  });
+  const [authState, setAuthState] = useState<
+    "checking" | "signed-out" | "signed-in"
+  >("checking");
+  const [customer, setCustomer] = useState<CustomerForm>(emptyCustomer);
+  const [shippingAddress, setShippingAddress] =
+    useState<ShippingAddressForm>(emptyAddress);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<PublicOrder | null>(null);
   const idempotencyKey = useRef<string | null>(null);
 
-  if (isLoading) {
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/auth/session", { cache: "no-store" })
+      .then(async (response) => {
+        const payload = (await response.json()) as ApiEnvelope<AccountUser>;
+        if (!active) return;
+        if (!response.ok || !payload.data) {
+          setAuthState("signed-out");
+          if (response.status !== 401) {
+            setError(payload.error?.message ?? "بررسی حساب انجام نشد.");
+          }
+          return;
+        }
+        const user = payload.data;
+        setCustomer({
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+        });
+        setShippingAddress({
+          city: user.defaultAddress.city ?? "",
+          addressLine: user.defaultAddress.addressLine ?? "",
+          postalCode: user.defaultAddress.postalCode ?? "",
+          plaque: user.defaultAddress.plaque ?? "",
+          unit: user.defaultAddress.unit ?? "",
+        });
+        setAuthState("signed-in");
+      })
+      .catch(() => {
+        if (active) {
+          setAuthState("signed-out");
+          setError("ارتباط با حساب کاربری برقرار نشد.");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (isLoading || authState === "checking") {
     return (
       <main id="main-content">
         <Container className="py-12 sm:py-16">
@@ -46,7 +106,6 @@ export function CheckoutPageClient() {
 
   if (createdOrder) {
     const total = formatPriceRial(createdOrder.totalPriceRial);
-
     return (
       <main id="main-content">
         <Container className="py-16 sm:py-24">
@@ -62,7 +121,6 @@ export function CheckoutPageClient() {
               مبلغ سفارش {total.rial} است. پرداخت در تلگرام ادامه پیدا می‌کند و
               رسید شما پیش از تأیید نهایی به‌صورت دستی بررسی خواهد شد.
             </p>
-
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <TelegramHandoffButton orderToken={createdOrder.publicToken} />
               <Button size="lg" variant="outline" asChild>
@@ -84,11 +142,45 @@ export function CheckoutPageClient() {
           <section className="bg-surface border-border/70 mx-auto max-w-2xl rounded-xl border px-6 py-14 text-center">
             <h1 className="text-3xl font-semibold">سبد شما خالی است</h1>
             <p className="text-muted-foreground mt-4 leading-8">
-              برای ادامه ثبت سفارش، ابتدا محصولی را به سبد اضافه کنید.
+              برای ادامه ثبت سفارش، ابتدا محصولی به سبد اضافه کنید.
             </p>
             <Button className="mt-7" asChild>
               <Link href="/products">مشاهده محصولات</Link>
             </Button>
+          </section>
+        </Container>
+      </main>
+    );
+  }
+
+  if (authState === "signed-out") {
+    return (
+      <main id="main-content">
+        <Container className="py-16 sm:py-24">
+          <section className="bg-surface border-border/70 mx-auto max-w-2xl rounded-xl border px-6 py-14 text-center shadow-sm sm:px-12">
+            <span className="bg-accent-soft text-accent-foreground mx-auto flex size-14 items-center justify-center rounded-full">
+              <LogIn aria-hidden="true" />
+            </span>
+            <h1 className="mt-6 text-3xl font-semibold">
+              برای ثبت سفارش وارد حساب شوید
+            </h1>
+            <p className="text-muted-foreground mt-4 leading-8">
+              سبد شما حفظ شده است. وارد حساب شوید یا یک حساب تازه بسازید تا
+              نشانی تحویل و سفارش‌ها به‌صورت امن در پروفایل شما ثبت شوند.
+            </p>
+            {error ? (
+              <p className="text-danger mt-4 text-sm" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <Button size="lg" asChild>
+                <Link href="/login?returnTo=/checkout">ورود به حساب</Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link href="/register?returnTo=/checkout">ساخت حساب</Link>
+              </Button>
+            </div>
           </section>
         </Container>
       </main>
@@ -101,9 +193,7 @@ export function CheckoutPageClient() {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
-
     idempotencyKey.current ??= crypto.randomUUID().replaceAll("-", "");
-
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
@@ -111,14 +201,12 @@ export function CheckoutPageClient() {
           "Content-Type": "application/json",
           "Idempotency-Key": idempotencyKey.current,
         },
-        body: JSON.stringify({ customer }),
+        body: JSON.stringify({ customer, shippingAddress }),
       });
       const payload = (await response.json()) as CreateOrderApiResponse;
-
       if (!response.ok || payload.error || !payload.data) {
-        const message = payload.error?.message ?? "ثبت سفارش انجام نشد.";
-        setError(message);
-
+        setError(payload.error?.message ?? "ثبت سفارش انجام نشد.");
+        if (response.status === 401) setAuthState("signed-out");
         if (
           payload.error &&
           (payload.error.code === "STOCK_CHANGED" ||
@@ -128,7 +216,6 @@ export function CheckoutPageClient() {
         }
         return;
       }
-
       clearCartAfterCheckout();
       setCreatedOrder(payload.data);
     } catch {
@@ -147,8 +234,8 @@ export function CheckoutPageClient() {
             چند قدم تا تکمیل انتخاب
           </h1>
           <p className="text-muted-foreground mt-5 leading-8">
-            اطلاعات تماس را وارد کنید. پس از ثبت سفارش، ادامه پرداخت و ارسال
-            رسید در تلگرام انجام می‌شود.
+            اطلاعات گیرنده و نشانی دقیق تحویل را بررسی کنید. این اطلاعات روی
+            سفارش ثبت می‌شوند و پرداخت در تلگرام ادامه پیدا می‌کند.
           </p>
         </div>
 
@@ -157,7 +244,7 @@ export function CheckoutPageClient() {
             onSubmit={(event) => void submitOrder(event)}
             className="bg-surface border-border/70 rounded-xl border p-5 shadow-sm sm:p-8"
           >
-            <h2 className="text-xl font-semibold">اطلاعات مشتری</h2>
+            <h2 className="text-xl font-semibold">اطلاعات گیرنده</h2>
             <div className="mt-7 grid gap-6 sm:grid-cols-2">
               <label className="sm:col-span-2">
                 <span className="mb-2 block text-sm font-medium">
@@ -200,15 +287,14 @@ export function CheckoutPageClient() {
                 />
               </label>
               <label>
-                <span className="mb-2 block text-sm font-medium">
-                  ایمیل <span className="text-muted-foreground">(اختیاری)</span>
-                </span>
+                <span className="mb-2 block text-sm font-medium">ایمیل</span>
                 <Input
                   name="email"
                   type="email"
                   inputMode="email"
                   autoComplete="email"
                   dir="ltr"
+                  required
                   value={customer.email}
                   onChange={(event) =>
                     setCustomer((current) => ({
@@ -220,10 +306,113 @@ export function CheckoutPageClient() {
               </label>
             </div>
 
+            <div className="border-border/70 mt-9 border-t pt-8">
+              <div className="flex items-center gap-3">
+                <MapPin className="text-accent size-5" aria-hidden="true" />
+                <h2 className="text-xl font-semibold">نشانی تحویل</h2>
+              </div>
+              <div className="mt-7 grid gap-6 sm:grid-cols-2">
+                <label>
+                  <span className="mb-2 block text-sm font-medium">شهر</span>
+                  <Input
+                    name="city"
+                    autoComplete="address-level2"
+                    required
+                    minLength={2}
+                    maxLength={80}
+                    value={shippingAddress.city}
+                    onChange={(event) =>
+                      setShippingAddress((current) => ({
+                        ...current,
+                        city: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  <span className="mb-2 block text-sm font-medium">
+                    کد پستی
+                  </span>
+                  <Input
+                    name="postalCode"
+                    inputMode="numeric"
+                    autoComplete="postal-code"
+                    dir="ltr"
+                    required
+                    minLength={10}
+                    maxLength={12}
+                    placeholder="1234567890"
+                    value={shippingAddress.postalCode}
+                    onChange={(event) =>
+                      setShippingAddress((current) => ({
+                        ...current,
+                        postalCode: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label className="sm:col-span-2">
+                  <span className="mb-2 block text-sm font-medium">
+                    نشانی کامل
+                  </span>
+                  <textarea
+                    name="addressLine"
+                    autoComplete="street-address"
+                    required
+                    minLength={8}
+                    maxLength={500}
+                    rows={4}
+                    value={shippingAddress.addressLine}
+                    onChange={(event) =>
+                      setShippingAddress((current) => ({
+                        ...current,
+                        addressLine: event.target.value,
+                      }))
+                    }
+                    className="border-border bg-surface focus-visible:border-accent focus-visible:ring-accent/20 w-full resize-y rounded-md border px-4 py-3 text-sm leading-7 outline-none focus-visible:ring-4"
+                  />
+                </label>
+                <label>
+                  <span className="mb-2 block text-sm font-medium">پلاک</span>
+                  <Input
+                    name="plaque"
+                    inputMode="numeric"
+                    required
+                    maxLength={20}
+                    value={shippingAddress.plaque}
+                    onChange={(event) =>
+                      setShippingAddress((current) => ({
+                        ...current,
+                        plaque: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  <span className="mb-2 block text-sm font-medium">
+                    واحد{" "}
+                    <span className="text-muted-foreground">(اختیاری)</span>
+                  </span>
+                  <Input
+                    name="unit"
+                    inputMode="numeric"
+                    maxLength={20}
+                    value={shippingAddress.unit}
+                    onChange={(event) =>
+                      setShippingAddress((current) => ({
+                        ...current,
+                        unit: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+
             <div className="border-border/70 mt-8 border-t pt-6">
               <h3 className="font-semibold">ادامه پرداخت چگونه است؟</h3>
               <ol className="text-muted-foreground mt-4 space-y-3 text-sm leading-7">
-                <li>۱. سفارش و موجودی محصولات برای شما ثبت می‌شود.</li>
+                <li>۱. سفارش، نشانی و موجودی محصولات ثبت می‌شود.</li>
                 <li>۲. ربات تلگرام جزئیات مبلغ و کارت را نمایش می‌دهد.</li>
                 <li>۳. رسید ارسال‌شده به‌صورت دستی بررسی می‌شود.</li>
               </ol>
@@ -237,7 +426,6 @@ export function CheckoutPageClient() {
                 {error}
               </p>
             ) : null}
-
             <Button
               type="submit"
               size="lg"
@@ -246,12 +434,12 @@ export function CheckoutPageClient() {
             >
               {isSubmitting ? (
                 <>
-                  در حال ثبت امن سفارش
+                  <span>در حال ثبت امن سفارش</span>
                   <LoaderCircle className="animate-spin" aria-hidden="true" />
                 </>
               ) : (
                 <>
-                  ثبت سفارش و ادامه
+                  <span>ثبت سفارش و ادامه</span>
                   <ArrowLeft aria-hidden="true" />
                 </>
               )}
