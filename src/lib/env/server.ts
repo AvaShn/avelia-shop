@@ -38,6 +38,11 @@ const serverEnvironmentSchema = z.object({
     .trim()
     .min(1)
     .default("payment-receipts"),
+  LOCAL_RECEIPT_STORAGE_DIR: z
+    .string()
+    .trim()
+    .min(1)
+    .default(".local-data/payment-receipts"),
   AUTH_SECRET: optionalSecret,
   ADMIN_EMAIL: optionalEnvironmentValue(z.email()),
   ADMIN_PASSWORD_HASH: optionalSecret,

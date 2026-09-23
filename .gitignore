@@ -20,6 +20,7 @@
 # local tooling
 /.npm-cache
 /.sites-runtime
+/.local-data
 
 # local project specification package
 /Avelia_Codex_Complete_Project_Package/

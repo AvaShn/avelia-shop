@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:telegram": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-with-system-proxy.ps1 tsx scripts/telegram/dev.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
@@ -25,10 +26,17 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:verify": "tsx prisma/verify.ts",
+    "account:verify": "tsx scripts/verify-account-flow.ts",
     "admin:hash-password": "tsx scripts/hash-admin-password.ts",
+    "telegram:check": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-with-system-proxy.ps1 tsx scripts/telegram/check.ts",
+    "telegram:configure": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-with-system-proxy.ps1 tsx scripts/telegram/configure.ts",
+    "telegram:poll": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-with-system-proxy.ps1 tsx scripts/telegram/poll.ts",
+    "telegram:webhook:set": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-with-system-proxy.ps1 tsx scripts/telegram/webhook.ts set",
+    "telegram:webhook:status": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-with-system-proxy.ps1 tsx scripts/telegram/webhook.ts status",
+    "telegram:webhook:delete": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-with-system-proxy.ps1 tsx scripts/telegram/webhook.ts delete",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@fontsource-variable/vazirmatn": "^5.3.0",

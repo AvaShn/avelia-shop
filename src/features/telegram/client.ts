@@ -1,15 +1,13 @@
 import "server-only";
 
+import {
+  detectReceiptContentType,
+  maximumReceiptBytes,
+} from "@/features/telegram/receipt-validation";
 import { serverEnvironment } from "@/lib/env/server";
 import { getPrismaClient } from "@/lib/prisma/client";
 
 const telegramRequestTimeoutMs = 10_000;
-const maximumReceiptBytes = 8 * 1024 * 1024;
-const allowedReceiptContentTypes = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
 
 type TelegramApiResponse<Result> = {
   ok: boolean;
@@ -84,19 +82,19 @@ export async function downloadTelegramPhoto(fileId: string) {
       cache: "no-store",
     },
   );
-  const contentType = response.headers.get("content-type")?.split(";")[0];
-  if (
-    !response.ok ||
-    !contentType ||
-    !allowedReceiptContentTypes.has(contentType)
-  ) {
-    throw new Error("INVALID_RECEIPT_CONTENT_TYPE");
+  if (!response.ok) throw new Error("TELEGRAM_FILE_DOWNLOAD_FAILED");
+
+  const declaredSize = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declaredSize) && declaredSize > maximumReceiptBytes) {
+    throw new Error("INVALID_RECEIPT_SIZE");
   }
 
   const bytes = new Uint8Array(await response.arrayBuffer());
   if (bytes.byteLength === 0 || bytes.byteLength > maximumReceiptBytes) {
     throw new Error("INVALID_RECEIPT_SIZE");
   }
+  const contentType = detectReceiptContentType(bytes);
+  if (!contentType) throw new Error("INVALID_RECEIPT_CONTENT_TYPE");
 
   return { bytes, contentType };
 }
@@ -122,4 +120,4 @@ export async function notifyCustomerAboutReview(
   );
 }
 
-export { allowedReceiptContentTypes, maximumReceiptBytes };
+export { maximumReceiptBytes };

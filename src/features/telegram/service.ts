@@ -52,11 +52,23 @@ function requiredPrisma() {
 }
 
 function telegramConfiguration() {
-  const { TELEGRAM_BOT_USERNAME, PAYMENT_SESSION_SECRET } = serverEnvironment;
-  if (!TELEGRAM_BOT_USERNAME || !PAYMENT_SESSION_SECRET) {
+  const {
+    TELEGRAM_BOT_TOKEN,
+    TELEGRAM_BOT_USERNAME,
+    PAYMENT_SESSION_SECRET,
+    PAYMENT_CARD_NUMBER,
+    PAYMENT_CARD_HOLDER,
+  } = serverEnvironment;
+  if (
+    !TELEGRAM_BOT_TOKEN ||
+    !TELEGRAM_BOT_USERNAME ||
+    !PAYMENT_SESSION_SECRET ||
+    !PAYMENT_CARD_NUMBER ||
+    !PAYMENT_CARD_HOLDER
+  ) {
     throw new TelegramServiceError(
       "CONFIGURATION_ERROR",
-      "تنظیمات امن تلگرام هنوز کامل نشده است.",
+      "تنظیمات پرداخت تلگرام هنوز کامل نشده است.",
       503,
     );
   }
@@ -319,7 +331,7 @@ async function processReceipt(
 
   await sendTelegramMessage(
     chatId,
-    "رسید دریافت شد. پرداخت شما اکنون در حال بررسی دستی است.",
+    "رسید شما دریافت شد. سفارش شما در دست بررسی است و پس از بررسی و تأیید پرداخت، ثبت نهایی می‌شود.",
   ).catch((error: unknown) =>
     console.error("Failed to notify the customer about receipt review.", error),
   );
@@ -345,6 +357,25 @@ export async function processTelegramUpdate(update: TelegramUpdate) {
   const message = update.message;
   if (!message?.from) return { kind: "ignored" as const };
 
+  if (message.text === "/id" || message.text?.match(/^\/id@[A-Za-z0-9_]+$/)) {
+    await sendTelegramMessage(
+      message.chat.id,
+      `شناسه عددی این گفتگو: ${message.chat.id}`,
+    );
+    return { kind: "chat-id-sent" as const };
+  }
+  if (
+    message.text === "/start" ||
+    message.text?.match(/^\/start@[A-Za-z0-9_]+$/) ||
+    message.text === "/help" ||
+    message.text?.match(/^\/help@[A-Za-z0-9_]+$/)
+  ) {
+    await sendTelegramMessage(
+      message.chat.id,
+      "برای پرداخت امن، ابتدا سفارش را در سایت AVELIA ثبت کنید و از دکمه «ادامه امن در تلگرام» وارد شوید. سپس تصویر واضح رسید را همین‌جا بفرستید.",
+    );
+    return { kind: "help-sent" as const };
+  }
   if (message.text?.startsWith("/start")) {
     return processStartMessage(message.chat.id, message.from.id, message.text);
   }

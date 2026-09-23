@@ -127,8 +127,12 @@ normal stop flow.
 ## Project status
 
 The application includes the premium Persian storefront, catalog and product
-pages, discounts, persistent cart and checkout, transactional orders,
-inventory reservations, Telegram receipt workflow, public order tracking, and
-protected admin review APIs. API setup and contracts are documented in
+pages, discounts, customer registration and revocable login sessions,
+persistent cart and address-aware checkout, transactional orders with delivery
+snapshots, inventory reservations, Telegram receipt workflow, customer order
+history, public order tracking, and protected admin review APIs. API setup and contracts are documented in
 [`docs/API.md`](docs/API.md), and database details are documented in
 [`prisma/README.md`](prisma/README.md).
+
+Local polling and production webhook setup for the payment bot are documented
+in [`docs/TELEGRAM_SETUP.md`](docs/TELEGRAM_SETUP.md).
