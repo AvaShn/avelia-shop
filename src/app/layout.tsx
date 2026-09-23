@@ -14,6 +14,18 @@ export const metadata: Metadata = {
   },
   description:
     "فروشگاه آنلاین لوازم آرایشی، محصولات مراقبت پوست و عطرهای اصیل و باکیفیت",
+  icons: {
+    icon: {
+      url: "/images/brand/avelia-final-mark-black-a-v12.png",
+      type: "image/png",
+      sizes: "1254x1254",
+    },
+    apple: {
+      url: "/images/brand/avelia-final-mark-black-a-v12.png",
+      type: "image/png",
+      sizes: "1254x1254",
+    },
+  },
 };
 
 export const viewport: Viewport = {

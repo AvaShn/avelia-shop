@@ -5,6 +5,21 @@ test("serves a Persian right-to-left document", async ({ page }) => {
 
   await expect(page.locator("html")).toHaveAttribute("lang", "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  const logo = page
+    .getByRole("link", { name: "AVELIA — صفحه اصلی" })
+    .first()
+    .locator("img");
+  await expect(logo).toHaveAttribute(
+    "src",
+    /avelia-final-mark-black-a-v12\.png/,
+  );
+  await expect
+    .poll(() => logo.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBeGreaterThan(0);
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
+    "href",
+    /avelia-final-mark-black-a-v12\.png/,
+  );
   await expect(
     page.getByRole("heading", {
       name: "انتخاب‌هایی برای کسانی که به جزئیات اهمیت می‌دهند.",
@@ -66,7 +81,8 @@ test("keeps primary link buttons readable", async ({ page }) => {
 test("adds a product to the persistent cart", async ({ page }) => {
   await page.goto("/");
   const addButton = page
-    .getByRole("button", { name: "افزودن به انتخاب‌ها" })
+    .locator("button:enabled")
+    .filter({ hasText: "افزودن به انتخاب‌ها" })
     .first();
   await expect(addButton).toBeEnabled();
   await addButton.click();

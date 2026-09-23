@@ -4,6 +4,7 @@ import { BrandMark } from "@/components/layout/brand-mark";
 import { Container } from "@/components/layout/container";
 
 const footerLinks = [
+  { label: "حساب کاربری", href: "/account" },
   { label: "ارتباط با ما", href: "/contact" },
   { label: "حریم خصوصی", href: "/policies/privacy" },
   { label: "شرایط سفارش", href: "/policies/terms" },
@@ -16,7 +17,7 @@ export function SiteFooter() {
       <Container className="py-14 sm:py-20">
         <div className="grid gap-12 border-b border-white/10 pb-12 md:grid-cols-[1.2fr_0.8fr] md:items-end">
           <div className="max-w-xl">
-            <BrandMark className="text-white" />
+            <BrandMark tone="dark" className="text-white" />
             <p className="mt-6 leading-8 text-white/60">
               انتخابی سنجیده از لوازم آرایشی، محصولات مراقبت پوست و عطرهای اصیل
               برای کسانی که به کیفیت و جزئیات اهمیت می‌دهند.
