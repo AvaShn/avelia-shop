@@ -13,6 +13,10 @@ export const metadata: Metadata = {
     "AVELIA مجموعه‌ای گزیده از لوازم آرایشی، محصولات مراقبت پوست و عطرهای اصیل برای انتخابی دقیق و قابل اعتماد.",
 };
 
+// Featured products and offers are database-managed and must stay current
+// without requiring a new deployment.
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   return (
     <main id="main-content" className="overflow-hidden">

@@ -6,6 +6,12 @@ import { dirname, extname, resolve, sep } from "node:path";
 import { createOpaqueToken } from "@/lib/security/tokens";
 import { serverEnvironment } from "@/lib/env/server";
 
+const localReceiptRoot = resolve(
+  process.cwd(),
+  ".local-data",
+  "payment-receipts",
+);
+
 function storageConfiguration() {
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_RECEIPTS_BUCKET } =
     serverEnvironment;
@@ -20,12 +26,8 @@ function storageConfiguration() {
 }
 
 function localReceiptPath(objectKey: string) {
-  const root = resolve(
-    process.cwd(),
-    serverEnvironment.LOCAL_RECEIPT_STORAGE_DIR,
-  );
-  const filePath = resolve(root, objectKey);
-  if (!filePath.startsWith(`${root}${sep}`)) {
+  const filePath = resolve(localReceiptRoot, objectKey);
+  if (!filePath.startsWith(`${localReceiptRoot}${sep}`)) {
     throw new Error("INVALID_LOCAL_RECEIPT_PATH");
   }
   return filePath;

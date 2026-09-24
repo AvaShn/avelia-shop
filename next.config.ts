@@ -1,5 +1,14 @@
 import type { NextConfig } from "next";
 
+const localArtifactExclusions = [
+  "./.pnpm-store/**/*",
+  "./.npm-cache/**/*",
+  "./.local-data/**/*",
+  "./.git/**/*",
+  "./playwright-report/**/*",
+  "./test-results/**/*",
+];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -9,14 +18,9 @@ const nextConfig: NextConfig = {
   // Production receipts are stored remotely, so none of these local/build
   // artifacts belong in a serverless function bundle.
   outputFileTracingExcludes: {
-    "/*": [
-      "./.pnpm-store/**/*",
-      "./.npm-cache/**/*",
-      "./.local-data/**/*",
-      "./.git/**/*",
-      "./playwright-report/**/*",
-      "./test-results/**/*",
-    ],
+    "/*": localArtifactExclusions,
+    "/api/telegram/*": localArtifactExclusions,
+    "/api/admin/orders/*": localArtifactExclusions,
   },
   async headers() {
     return [

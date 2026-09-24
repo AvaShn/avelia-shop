@@ -2,6 +2,11 @@ import type { MetadataRoute } from "next";
 
 import { listStorefrontProducts } from "@/features/products/repository";
 
+// Product URLs come from PostgreSQL and can change without a deployment.
+// Generate the sitemap on demand instead of requiring database access during
+// the Vercel build.
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const now = new Date();
