@@ -3,6 +3,21 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Local receipt storage uses a runtime file path during development. Without
+  // explicit exclusions, Node File Trace can conservatively include the whole
+  // project and Vercel may try to package pnpm's transient SQLite sidecar files.
+  // Production receipts are stored remotely, so none of these local/build
+  // artifacts belong in a serverless function bundle.
+  outputFileTracingExcludes: {
+    "/*": [
+      "./.pnpm-store/**/*",
+      "./.npm-cache/**/*",
+      "./.local-data/**/*",
+      "./.git/**/*",
+      "./playwright-report/**/*",
+      "./test-results/**/*",
+    ],
+  },
   async headers() {
     return [
       {
