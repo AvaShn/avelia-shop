@@ -60,6 +60,8 @@ function mapSummary(order: {
   publicToken: string;
   status: "PENDING_PAYMENT" | "WAITING_REVIEW" | "PAID" | "REJECTED";
   totalPriceRial: bigint;
+  shippingMethod: "POST" | "TIPAX";
+  shippingCostRial: bigint;
   recipientName: string;
   recipientPhoneNormalized: string;
   recipientEmail: string;
@@ -77,6 +79,7 @@ function mapSummary(order: {
 }) {
   if (!order.payment) throw new Error("ORDER_PAYMENT_MISSING");
   const totalPriceRial = safeMoney(order.totalPriceRial);
+  const shippingCostRial = safeMoney(order.shippingCostRial);
 
   return adminOrderSummarySchema.parse({
     publicToken: order.publicToken,
@@ -90,6 +93,9 @@ function mapSummary(order: {
     },
     totalPriceRial,
     totalPrice: formatPriceRial(totalPriceRial),
+    shippingMethod: order.shippingMethod,
+    shippingCostRial,
+    shippingCost: formatPriceRial(shippingCostRial),
     itemCount: order._count.items,
     receiptAvailable: Boolean(
       order.payment.receiptObjectKey || order.payment.telegramFileId,
@@ -311,4 +317,54 @@ export async function getAdminReceiptReference(publicToken: string) {
     );
   }
   return order.payment;
+}
+
+export async function deleteAdminOrder(publicToken: string) {
+  const prisma = requiredPrisma();
+
+  return prisma.$transaction(async (transaction) => {
+    const order = await transaction.order.findUnique({
+      where: { publicToken },
+      select: {
+        id: true,
+        publicToken: true,
+        payment: { select: { receiptObjectKey: true } },
+        items: { select: { productId: true, quantity: true } },
+      },
+    });
+    if (!order) {
+      throw new AdminOrderError(
+        "ORDER_NOT_FOUND",
+        "سفارش موردنظر پیدا نشد.",
+        404,
+      );
+    }
+
+    const reservation = await transaction.order.updateMany({
+      where: {
+        id: order.id,
+        status: { in: ["PENDING_PAYMENT", "WAITING_REVIEW"] },
+        inventoryCommittedAt: null,
+        inventoryReleasedAt: null,
+      },
+      data: { inventoryReleasedAt: new Date() },
+    });
+
+    if (reservation.count === 1) {
+      for (const item of order.items) {
+        await transaction.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: item.quantity } },
+        });
+      }
+    }
+
+    await transaction.order.delete({ where: { id: order.id } });
+
+    return {
+      deleted: true as const,
+      publicToken: order.publicToken,
+      receiptObjectKey: order.payment?.receiptObjectKey ?? null,
+    };
+  });
 }

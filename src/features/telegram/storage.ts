@@ -1,6 +1,6 @@
 import "server-only";
 
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, unlink } from "node:fs/promises";
 import { dirname, extname, resolve, sep } from "node:path";
 
 import { createOpaqueToken } from "@/lib/security/tokens";
@@ -117,4 +117,40 @@ export async function readPrivateReceipt(objectKey: string) {
     throw new Error(`PRIVATE_RECEIPT_READ_FAILED:${response.status}`);
   }
   return response;
+}
+
+export async function deletePrivateReceipt(objectKey: string) {
+  const configuration = storageConfiguration();
+  if (!configuration) {
+    if (serverEnvironment.NODE_ENV === "production") {
+      throw new Error("PRIVATE_RECEIPT_STORAGE_NOT_CONFIGURED");
+    }
+    try {
+      await unlink(localReceiptPath(objectKey));
+    } catch (error: unknown) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return;
+      }
+      throw error;
+    }
+    return;
+  }
+
+  const response = await fetch(
+    `${configuration.baseUrl}/storage/v1/object/${encodeURIComponent(configuration.bucket)}/${encodedObjectPath(objectKey)}`,
+    {
+      method: "DELETE",
+      headers: storageHeaders(configuration.serviceRoleKey),
+      signal: AbortSignal.timeout(15_000),
+      cache: "no-store",
+    },
+  );
+  if (!response.ok && response.status !== 404) {
+    throw new Error(`PRIVATE_RECEIPT_DELETE_FAILED:${response.status}`);
+  }
 }
