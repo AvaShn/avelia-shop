@@ -78,7 +78,17 @@ const safeUserDeletionMigration = readFileSync(
   ),
   "utf8",
 );
-const migrations = `${initialMigration}\n${cartCheckoutMigration}\n${apiSecurityMigration}\n${productDataIntegrityMigration}\n${productImagePathsMigration}\n${customerAccountsShippingMigration}\n${safeUserDeletionMigration}`;
+const orderShippingMethodMigration = readFileSync(
+  join(
+    projectPath,
+    "prisma",
+    "migrations",
+    "20260926120000_order_shipping_method",
+    "migration.sql",
+  ),
+  "utf8",
+);
+const migrations = `${initialMigration}\n${cartCheckoutMigration}\n${apiSecurityMigration}\n${productDataIntegrityMigration}\n${productImagePathsMigration}\n${customerAccountsShippingMigration}\n${safeUserDeletionMigration}\n${orderShippingMethodMigration}`;
 
 describe("Prisma database contract", () => {
   it.each([
@@ -185,6 +195,18 @@ describe("Prisma database contract", () => {
 
     expect(schema).toContain("defaultAddressLine");
     expect(schema).toContain("defaultPostalCode");
+  });
+
+  it("stores the selected shipping method and immutable shipping charge", () => {
+    expect(schema).toMatch(/enum ShippingMethod \{\s+POST\s+TIPAX\s+\}/);
+    expect(schema).toContain("shippingMethod");
+    expect(schema).toContain("shippingCostRial");
+    expect(orderShippingMethodMigration).toContain(
+      'CREATE TYPE "ShippingMethod"',
+    );
+    expect(orderShippingMethodMigration).toContain(
+      '"Order_shippingCostRial_nonnegative"',
+    );
   });
 
   it("deletes a customer safely without leaking reservations or carts", () => {

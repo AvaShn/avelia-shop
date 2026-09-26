@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { checkoutCustomerSchema } from "@/features/orders/customer";
+import { shippingMethodSchema } from "@/features/orders/shipping";
 import { cursorSchema } from "@/lib/api/cursor";
 
 export const registerAccountSchema = checkoutCustomerSchema
@@ -51,6 +52,7 @@ export const accountOrderSummarySchema = z.object({
   paymentStatus: z.enum(["PENDING", "UNDER_REVIEW", "APPROVED", "REJECTED"]),
   totalPriceRial: z.number().int().nonnegative(),
   totalPrice: z.object({ rial: z.string(), tomanWords: z.string() }),
+  shippingMethod: shippingMethodSchema,
   itemCount: z.number().int().nonnegative(),
   deliveryCity: z.string(),
   createdAt: z.string().datetime(),

@@ -85,6 +85,7 @@ export async function listCustomerOrders(
         paymentStatus: order.payment.status,
         totalPriceRial,
         totalPrice: formatPriceRial(totalPriceRial),
+        shippingMethod: order.shippingMethod,
         itemCount: order._count.items,
         deliveryCity: order.shippingCity,
         createdAt: order.createdAt.toISOString(),

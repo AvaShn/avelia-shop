@@ -22,6 +22,11 @@ enum PaymentStatus {
   REJECTED
 }
 
+enum ShippingMethod {
+  POST
+  TIPAX
+}
+
 model User {
   id                 String        @id @default(cuid())
   name               String
@@ -122,14 +127,16 @@ model CartItem {
 }
 
 model Order {
-  id                            String      @id @default(cuid())
-  publicToken                   String      @unique
-  checkoutIdempotencyKeyHash    String      @unique
+  id                            String         @id @default(cuid())
+  publicToken                   String         @unique
+  checkoutIdempotencyKeyHash    String         @unique
   userId                        String
-  user                          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cartId                        String?     @unique
-  cart                          Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  user                          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cartId                        String?        @unique
+  cart                          Cart?          @relation(fields: [cartId], references: [id], onDelete: SetNull)
   totalPriceRial                BigInt
+  shippingMethod                ShippingMethod @default(TIPAX)
+  shippingCostRial              BigInt         @default(0)
   recipientName                 String
   recipientPhoneNormalized      String
   recipientEmail                String
@@ -138,13 +145,13 @@ model Order {
   shippingPostalCode            String
   shippingPlaque                String
   shippingUnit                  String?
-  status                        OrderStatus @default(PENDING_PAYMENT)
+  status                        OrderStatus    @default(PENDING_PAYMENT)
   inventoryReservationExpiresAt DateTime
   inventoryCommittedAt          DateTime?
   inventoryReleasedAt           DateTime?
   rejectionReason               String?
-  createdAt                     DateTime    @default(now())
-  updatedAt                     DateTime    @updatedAt
+  createdAt                     DateTime       @default(now())
+  updatedAt                     DateTime       @updatedAt
   items                         OrderItem[]
   payment                       Payment?
 

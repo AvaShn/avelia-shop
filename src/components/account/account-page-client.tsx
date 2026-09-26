@@ -19,6 +19,7 @@ import type {
 } from "@/features/account/schemas";
 import type { ApiEnvelope } from "@/lib/api/contracts";
 import { formatPersianInteger } from "@/lib/i18n/format-number";
+import { shippingMethodLabels } from "@/features/orders/shipping";
 
 const orderLabels = {
   PENDING_PAYMENT: "در انتظار پرداخت",
@@ -246,6 +247,9 @@ export function AccountPageClient() {
                     <span>{formatPersianInteger(order.itemCount)} محصول</span>
                     <span>ارسال به {order.deliveryCity}</span>
                   </div>
+                  <p className="text-muted-foreground mt-2 text-xs">
+                    {shippingMethodLabels[order.shippingMethod]}
+                  </p>
                   <Button variant="ghost" size="sm" className="mt-4" asChild>
                     <Link href={`/order/${order.publicToken}`}>
                       مشاهده سفارش

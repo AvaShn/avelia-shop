@@ -13,6 +13,7 @@ import {
   assertPaymentTransition,
 } from "@/features/orders/status-transitions";
 import { formatPersianInteger } from "@/lib/i18n/format-number";
+import { shippingMethodLabels } from "@/features/orders/shipping";
 import { formatPriceRial } from "@/lib/pricing/format-price";
 import { getPrismaClient } from "@/lib/prisma/client";
 import { serverEnvironment } from "@/lib/env/server";
@@ -140,10 +141,13 @@ function orderMessage(payment: {
   order: {
     publicToken: string;
     totalPriceRial: bigint;
+    shippingMethod: "POST" | "TIPAX";
+    shippingCostRial: bigint;
     items: Array<{ quantity: number; product: { name: string } }>;
   };
 }) {
   const total = formatPriceRial(payment.order.totalPriceRial);
+  const shippingCost = formatPriceRial(payment.order.shippingCostRial);
   const lines = payment.order.items.map(
     (item) => `• ${item.product.name} × ${formatPersianInteger(item.quantity)}`,
   );
@@ -154,6 +158,11 @@ function orderMessage(payment: {
     "سفارش AVELIA شما آماده ادامه پرداخت است.",
     "",
     ...lines,
+    "",
+    `روش ارسال: ${shippingMethodLabels[payment.order.shippingMethod]}`,
+    payment.order.shippingMethod === "POST"
+      ? `هزینه ارسال: ${shippingCost.rial} (در مبلغ سفارش محاسبه شده)`
+      : "هزینه تیپاکس هنگام تحویل درب منزل پرداخت می‌شود.",
     "",
     `مبلغ: ${total.rial}`,
     `معادل ${total.tomanWords}`,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, ShieldCheck } from "lucide-react";
+import { Check, ShieldCheck, Truck } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
@@ -211,6 +211,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <p className="text-muted-foreground mt-4 text-center text-xs leading-6">
               موجودی و قیمت هنگام ثبت سفارش دوباره بررسی می‌شود.
             </p>
+            <div className="border-border/70 bg-surface-strong mt-5 flex items-start gap-3 rounded-lg border p-4">
+              <Truck
+                className="text-accent mt-0.5 size-5 shrink-0"
+                aria-hidden="true"
+              />
+              <p className="text-muted-foreground text-xs leading-6">
+                انتخاب روش ارسال در ثبت سفارش: پست پیشتاز با هزینه ۱۵۰ هزار
+                تومان، یا تیپاکس با پرداخت کرایه هنگام تحویل درب منزل.
+              </p>
+            </div>
           </div>
         </section>
 

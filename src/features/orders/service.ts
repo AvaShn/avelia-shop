@@ -10,6 +10,10 @@ import type {
   ShippingAddress,
 } from "@/features/orders/customer";
 import type { OrderApiErrorCode, PublicOrder } from "@/features/orders/types";
+import {
+  shippingCostRial,
+  type ShippingMethod,
+} from "@/features/orders/shipping";
 import { serverEnvironment } from "@/lib/env/server";
 import { getPrismaClient } from "@/lib/prisma/client";
 import {
@@ -35,6 +39,7 @@ type CreateOrderInput = {
   idempotencyKey: string;
   customer: CheckoutCustomer;
   shippingAddress: ShippingAddress;
+  shippingMethod: ShippingMethod;
 };
 
 function safeBigIntToNumber(value: bigint, field: string) {
@@ -74,14 +79,23 @@ async function publicOrderByToken(publicToken: string): Promise<PublicOrder> {
     );
   }
 
+  const totalPriceRial = safeBigIntToNumber(
+    order.totalPriceRial,
+    "Order.totalPriceRial",
+  );
+  const shippingCost = safeBigIntToNumber(
+    order.shippingCostRial,
+    "Order.shippingCostRial",
+  );
+
   return {
     publicToken: order.publicToken,
     status: order.status,
     paymentStatus: order.payment.status,
-    totalPriceRial: safeBigIntToNumber(
-      order.totalPriceRial,
-      "Order.totalPriceRial",
-    ),
+    shippingMethod: order.shippingMethod,
+    shippingCostRial: shippingCost,
+    itemsSubtotalRial: totalPriceRial - shippingCost,
+    totalPriceRial,
     items: order.items.map((item) => {
       const product = databaseProductToDomain(item.product);
       const image = product.images[0];
@@ -293,7 +307,11 @@ export async function createOrderFromCart(input: CreateOrderInput) {
               checkoutIdempotencyKeyHash: idempotencyHash,
               userId: account.id,
               cartId: cart.id,
-              totalPriceRial: pricingSnapshot.totalPriceRial,
+              totalPriceRial:
+                pricingSnapshot.totalPriceRial +
+                BigInt(shippingCostRial(input.shippingMethod)),
+              shippingMethod: input.shippingMethod,
+              shippingCostRial: shippingCostRial(input.shippingMethod),
               recipientName: input.customer.name,
               recipientPhoneNormalized: input.customer.phone,
               recipientEmail: input.customer.email,

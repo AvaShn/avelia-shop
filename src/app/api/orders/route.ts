@@ -2,10 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { NextRequest } from "next/server";
 
-import {
-  AccountAuthError,
-  readCustomerSession,
-} from "@/features/account/auth";
+import { AccountAuthError, readCustomerSession } from "@/features/account/auth";
 import {
   clearCartSession,
   readCartRequestSession,
@@ -95,7 +92,7 @@ export async function POST(request: NextRequest) {
         400,
         {
           code: "INVALID_REQUEST",
-          message: "اطلاعات تماس و نشانی تحویل را بررسی کنید.",
+          message: "اطلاعات تماس، نشانی تحویل و روش ارسال را بررسی کنید.",
           ...(parsedBody.success
             ? {}
             : { fieldErrors: parsedBody.error.flatten().fieldErrors }),
@@ -112,6 +109,7 @@ export async function POST(request: NextRequest) {
         idempotencyKey: idempotencyKey.data,
         customer: parsedBody.data.customer,
         shippingAddress: parsedBody.data.shippingAddress,
+        shippingMethod: parsedBody.data.shippingMethod,
       }),
     );
     const response = apiSuccess(order, {

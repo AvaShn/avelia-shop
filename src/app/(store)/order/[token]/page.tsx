@@ -8,6 +8,7 @@ import { TelegramHandoffButton } from "@/components/checkout/telegram-handoff-bu
 import { Container } from "@/components/layout/container";
 import { publicOrderTokenSchema } from "@/features/orders/schemas";
 import { OrderServiceError, findPublicOrder } from "@/features/orders/service";
+import { shippingMethodLabels } from "@/features/orders/shipping";
 import type { PublicOrderStatus } from "@/features/orders/types";
 import { formatPriceRial } from "@/lib/pricing/format-price";
 
@@ -58,6 +59,8 @@ export default async function OrderPage({ params }: OrderPageProps) {
 
   const content = statusContent[order.status];
   const total = formatPriceRial(order.totalPriceRial);
+  const itemsSubtotal = formatPriceRial(order.itemsSubtotalRial);
+  const shippingCost = formatPriceRial(order.shippingCostRial);
 
   return (
     <main id="main-content">
@@ -98,6 +101,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
                       src={item.product.image}
                       alt={item.product.imageAlt}
                       fill
+                      unoptimized={item.product.image.startsWith("https://")}
                       sizes="64px"
                       className="object-cover"
                     />
@@ -123,12 +127,28 @@ export default async function OrderPage({ params }: OrderPageProps) {
             </ul>
           </div>
 
-          <div className="border-border/70 mt-8 flex flex-wrap items-center justify-between gap-4 border-t pt-7">
-            <span className="font-medium">مبلغ سفارش</span>
-            <span className="text-lg font-semibold" dir="rtl">
-              {total.rial}
-            </span>
-          </div>
+          <dl className="border-border/70 mt-8 space-y-3 border-t pt-7 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <dt className="text-muted-foreground">جمع محصولات</dt>
+              <dd dir="rtl">{itemsSubtotal.rial}</dd>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <dt className="text-muted-foreground">
+                ارسال با {shippingMethodLabels[order.shippingMethod]}
+              </dt>
+              <dd dir="rtl">
+                {order.shippingMethod === "POST"
+                  ? shippingCost.rial
+                  : "پرداخت درب منزل"}
+              </dd>
+            </div>
+            <div className="border-border/70 flex flex-wrap items-center justify-between gap-4 border-t pt-4">
+              <dt className="font-medium">مبلغ سفارش</dt>
+              <dd className="text-lg font-semibold" dir="rtl">
+                {total.rial}
+              </dd>
+            </div>
+          </dl>
 
           {order.status === "PENDING_PAYMENT" ? (
             <div className="mt-8">

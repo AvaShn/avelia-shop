@@ -4,10 +4,12 @@ import {
   checkoutCustomerSchema,
   shippingAddressSchema,
 } from "@/features/orders/customer";
+import { shippingMethodSchema } from "@/features/orders/shipping";
 
 export const createOrderSchema = z.object({
   customer: checkoutCustomerSchema,
   shippingAddress: shippingAddressSchema,
+  shippingMethod: shippingMethodSchema,
 });
 
 export const idempotencyKeySchema = z
@@ -40,6 +42,9 @@ export const publicOrderSchema = z.object({
   publicToken: publicOrderTokenSchema,
   status: z.enum(["PENDING_PAYMENT", "WAITING_REVIEW", "PAID", "REJECTED"]),
   paymentStatus: z.enum(["PENDING", "UNDER_REVIEW", "APPROVED", "REJECTED"]),
+  shippingMethod: shippingMethodSchema,
+  shippingCostRial: z.number().int().nonnegative(),
+  itemsSubtotalRial: z.number().int().nonnegative(),
   totalPriceRial: z.number().int().nonnegative(),
   items: z.array(publicOrderItemSchema),
   inventoryReservationExpiresAt: z.string().datetime(),

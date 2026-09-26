@@ -8,6 +8,8 @@ import {
   LoaderCircle,
   LogIn,
   MapPin,
+  PackageCheck,
+  Truck,
 } from "lucide-react";
 
 import { TelegramHandoffButton } from "@/components/checkout/telegram-handoff-button";
@@ -21,6 +23,11 @@ import type {
   CreateOrderApiResponse,
   PublicOrder,
 } from "@/features/orders/types";
+import {
+  shippingCostRial,
+  shippingMethodLabels,
+  type ShippingMethod,
+} from "@/features/orders/shipping";
 import type { ApiEnvelope } from "@/lib/api/contracts";
 import { formatPriceRial } from "@/lib/pricing/format-price";
 
@@ -50,6 +57,7 @@ export function CheckoutPageClient() {
   const [customer, setCustomer] = useState<CustomerForm>(emptyCustomer);
   const [shippingAddress, setShippingAddress] =
     useState<ShippingAddressForm>(emptyAddress);
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("POST");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<PublicOrder | null>(null);
@@ -121,6 +129,12 @@ export function CheckoutPageClient() {
               مبلغ سفارش {total.rial} است. پرداخت در تلگرام ادامه پیدا می‌کند و
               رسید شما پیش از تأیید نهایی به‌صورت دستی بررسی خواهد شد.
             </p>
+            <p className="text-muted-foreground mt-3 text-sm leading-7">
+              روش ارسال: {shippingMethodLabels[createdOrder.shippingMethod]}
+              {createdOrder.shippingMethod === "TIPAX"
+                ? "؛ کرایه تیپاکس هنگام تحویل جداگانه پرداخت می‌شود."
+                : "؛ هزینه ارسال در مبلغ سفارش محاسبه شده است."}
+            </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <TelegramHandoffButton orderToken={createdOrder.publicToken} />
               <Button size="lg" variant="outline" asChild>
@@ -187,7 +201,12 @@ export function CheckoutPageClient() {
     );
   }
 
-  const total = formatPriceRial(cart.totalPriceRial);
+  const itemsSubtotal = formatPriceRial(cart.totalPriceRial);
+  const selectedShippingCostRial = shippingCostRial(shippingMethod);
+  const selectedShippingCost = formatPriceRial(selectedShippingCostRial);
+  const payableTotal = formatPriceRial(
+    cart.totalPriceRial + selectedShippingCostRial,
+  );
 
   async function submitOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -201,7 +220,7 @@ export function CheckoutPageClient() {
           "Content-Type": "application/json",
           "Idempotency-Key": idempotencyKey.current,
         },
-        body: JSON.stringify({ customer, shippingAddress }),
+        body: JSON.stringify({ customer, shippingAddress, shippingMethod }),
       });
       const payload = (await response.json()) as CreateOrderApiResponse;
       if (!response.ok || payload.error || !payload.data) {
@@ -410,6 +429,72 @@ export function CheckoutPageClient() {
             </div>
 
             <div className="border-border/70 mt-8 border-t pt-6">
+              <h2 className="text-xl font-semibold">روش ارسال</h2>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <label
+                  className={`cursor-pointer rounded-lg border p-4 transition-colors ${
+                    shippingMethod === "POST"
+                      ? "border-accent bg-accent-soft"
+                      : "border-border/70 bg-surface hover:border-accent/50"
+                  }`}
+                >
+                  <span className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value="POST"
+                      checked={shippingMethod === "POST"}
+                      onChange={() => setShippingMethod("POST")}
+                      className="accent-accent mt-1 size-4"
+                    />
+                    <span>
+                      <span className="flex items-center gap-2 font-medium">
+                        <PackageCheck
+                          className="text-accent size-5"
+                          aria-hidden="true"
+                        />
+                        پست پیشتاز
+                      </span>
+                      <span className="text-muted-foreground mt-2 block text-sm leading-6">
+                        ۱۵۰ هزار تومان به مبلغ سفارش اضافه می‌شود.
+                      </span>
+                    </span>
+                  </span>
+                </label>
+                <label
+                  className={`cursor-pointer rounded-lg border p-4 transition-colors ${
+                    shippingMethod === "TIPAX"
+                      ? "border-accent bg-accent-soft"
+                      : "border-border/70 bg-surface hover:border-accent/50"
+                  }`}
+                >
+                  <span className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value="TIPAX"
+                      checked={shippingMethod === "TIPAX"}
+                      onChange={() => setShippingMethod("TIPAX")}
+                      className="accent-accent mt-1 size-4"
+                    />
+                    <span>
+                      <span className="flex items-center gap-2 font-medium">
+                        <Truck
+                          className="text-accent size-5"
+                          aria-hidden="true"
+                        />
+                        تیپاکس
+                      </span>
+                      <span className="text-muted-foreground mt-2 block text-sm leading-6">
+                        کرایه براساس مقصد، هنگام تحویل درب منزل پرداخت می‌شود.
+                      </span>
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div className="border-border/70 mt-8 border-t pt-6">
               <h3 className="font-semibold">ادامه پرداخت چگونه است؟</h3>
               <ol className="text-muted-foreground mt-4 space-y-3 text-sm leading-7">
                 <li>۱. سفارش، نشانی و موجودی محصولات ثبت می‌شود.</li>
@@ -463,14 +548,28 @@ export function CheckoutPageClient() {
                 </li>
               ))}
             </ul>
-            <div className="border-border/70 mt-6 flex items-start justify-between gap-4 border-t pt-6">
-              <span className="font-medium">مبلغ قابل پرداخت</span>
-              <span className="font-semibold" dir="rtl">
-                {total.rial}
-              </span>
-            </div>
+            <dl className="border-border/70 mt-6 space-y-3 border-t pt-6 text-sm">
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-muted-foreground">جمع محصولات</dt>
+                <dd dir="rtl">{itemsSubtotal.rial}</dd>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-muted-foreground">هزینه ارسال</dt>
+                <dd className="text-left" dir="rtl">
+                  {shippingMethod === "POST"
+                    ? selectedShippingCost.rial
+                    : "پرداخت درب منزل"}
+                </dd>
+              </div>
+              <div className="border-border/70 flex items-start justify-between gap-4 border-t pt-4 text-base">
+                <dt className="font-medium">مبلغ قابل پرداخت</dt>
+                <dd className="font-semibold" dir="rtl">
+                  {payableTotal.rial}
+                </dd>
+              </div>
+            </dl>
             <p className="text-muted-foreground mt-3 text-xs leading-6">
-              مبلغ نهایی در سمت سرور و براساس قیمت روز محصولات محاسبه می‌شود.
+              مبلغ نهایی محصولات و هزینه ارسال در سمت سرور دوباره محاسبه می‌شود.
             </p>
           </aside>
         </div>
