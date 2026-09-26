@@ -106,6 +106,7 @@ export function CartPageClient() {
                       src={item.product.image}
                       alt={item.product.imageAlt}
                       fill
+                      unoptimized={item.product.image.startsWith("https://")}
                       sizes="128px"
                       className="object-cover"
                     />

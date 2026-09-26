@@ -33,6 +33,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           src={product.image}
           alt={product.imageAlt}
           fill
+          unoptimized={product.image.startsWith("https://")}
           priority={priority}
           sizes="(min-width: 1024px) 23vw, (min-width: 640px) 42vw, 78vw"
           className="object-cover transition-transform duration-700 ease-[var(--ease-avelia)] group-hover:scale-[1.035]"

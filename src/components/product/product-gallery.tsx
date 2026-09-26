@@ -36,6 +36,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               src={activeImage.src}
               alt={activeImage.alt}
               fill
+              unoptimized={activeImage.src.startsWith("https://")}
               priority={activeIndex === 0}
               sizes="(min-width: 1024px) 58vw, 100vw"
               className="object-cover"
@@ -64,6 +65,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                 src={image.src}
                 alt=""
                 fill
+                unoptimized={image.src.startsWith("https://")}
                 sizes="104px"
                 className="object-cover"
               />
