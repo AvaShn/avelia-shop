@@ -36,8 +36,10 @@ send `/id`. Copy the number returned by the bot into `TELEGRAM_ADMIN_ID`, then
 restart both Next.js and polling.
 
 Local receipt images are stored privately under `.local-data/payment-receipts`
-and are ignored by Git. Production requires the private Supabase Storage
-variables because Vercel's filesystem is ephemeral.
+and are ignored by Git. On Vercel, receipts are stored privately in PostgreSQL
+by default because the serverless filesystem is ephemeral. Supabase Storage is
+optional: when `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are configured,
+the same private receipt API uses that bucket instead.
 
 ## Local run
 

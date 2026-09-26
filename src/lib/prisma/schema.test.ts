@@ -88,7 +88,17 @@ const orderShippingMethodMigration = readFileSync(
   ),
   "utf8",
 );
-const migrations = `${initialMigration}\n${cartCheckoutMigration}\n${apiSecurityMigration}\n${productDataIntegrityMigration}\n${productImagePathsMigration}\n${customerAccountsShippingMigration}\n${safeUserDeletionMigration}\n${orderShippingMethodMigration}`;
+const privateReceiptStorageMigration = readFileSync(
+  join(
+    projectPath,
+    "prisma",
+    "migrations",
+    "20260926170000_private_receipt_database_storage",
+    "migration.sql",
+  ),
+  "utf8",
+);
+const migrations = `${initialMigration}\n${cartCheckoutMigration}\n${apiSecurityMigration}\n${productDataIntegrityMigration}\n${productImagePathsMigration}\n${customerAccountsShippingMigration}\n${safeUserDeletionMigration}\n${orderShippingMethodMigration}\n${privateReceiptStorageMigration}`;
 
 describe("Prisma database contract", () => {
   it.each([
@@ -101,6 +111,7 @@ describe("Prisma database contract", () => {
     "Order",
     "OrderItem",
     "Payment",
+    "PrivateReceipt",
     "ApiRateLimit",
   ])("defines the %s model required by AVELIA", (model) => {
     expect(schema).toContain(`model ${model} {`);
@@ -163,6 +174,12 @@ describe("Prisma database contract", () => {
     expect(schema).toContain("providerUpdateId");
     expect(schema).toContain("receiptObjectKey");
     expect(schema).not.toContain("receiptImage");
+    expect(privateReceiptStorageMigration).toContain(
+      'CREATE TABLE "PrivateReceipt"',
+    );
+    expect(privateReceiptStorageMigration).toContain(
+      '"PrivateReceipt_size_valid"',
+    );
   });
 
   it("stores customer credentials as hashes and uses revocable sessions", () => {

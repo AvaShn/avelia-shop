@@ -198,6 +198,15 @@ model Payment {
   @@index([reviewedAt])
 }
 
+model PrivateReceipt {
+  objectKey   String   @id
+  contentType String
+  bytes       Bytes
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model ApiRateLimit {
   scope       String
   keyHash     String

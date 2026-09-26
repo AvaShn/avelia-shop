@@ -5,6 +5,7 @@ import { dirname, extname, resolve, sep } from "node:path";
 
 import { createOpaqueToken } from "@/lib/security/tokens";
 import { serverEnvironment } from "@/lib/env/server";
+import { getPrismaClient } from "@/lib/prisma/client";
 
 const localReceiptRoot = resolve(
   process.cwd(),
@@ -51,6 +52,12 @@ function storageHeaders(serviceRoleKey: string) {
   };
 }
 
+function requiredReceiptDatabase() {
+  const prisma = getPrismaClient();
+  if (!prisma) throw new Error("PRIVATE_RECEIPT_DATABASE_NOT_CONFIGURED");
+  return prisma;
+}
+
 export async function storePrivateReceipt(
   orderId: string,
   receipt: { bytes: Uint8Array; contentType: string },
@@ -65,7 +72,14 @@ export async function storePrivateReceipt(
   const objectKey = `orders/${orderId}/${createOpaqueToken(18)}.${extension}`;
   if (!configuration) {
     if (serverEnvironment.NODE_ENV === "production") {
-      throw new Error("PRIVATE_RECEIPT_STORAGE_NOT_CONFIGURED");
+      await requiredReceiptDatabase().privateReceipt.create({
+        data: {
+          objectKey,
+          contentType: receipt.contentType,
+          bytes: Buffer.from(receipt.bytes),
+        },
+      });
+      return objectKey;
     }
     const filePath = localReceiptPath(objectKey);
     await mkdir(dirname(filePath), { recursive: true });
@@ -97,7 +111,20 @@ export async function readPrivateReceipt(objectKey: string) {
   const configuration = storageConfiguration();
   if (!configuration) {
     if (serverEnvironment.NODE_ENV === "production") {
-      throw new Error("PRIVATE_RECEIPT_STORAGE_NOT_CONFIGURED");
+      const receipt = await requiredReceiptDatabase().privateReceipt.findUnique(
+        {
+          where: { objectKey },
+          select: { bytes: true, contentType: true },
+        },
+      );
+      if (!receipt) throw new Error("PRIVATE_RECEIPT_NOT_FOUND");
+      return new Response(receipt.bytes, {
+        headers: {
+          "Content-Type": receipt.contentType,
+          "Cache-Control": "private, no-store",
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
     }
     const bytes = await readFile(localReceiptPath(objectKey));
     return new Response(new Uint8Array(bytes), {
@@ -123,7 +150,10 @@ export async function deletePrivateReceipt(objectKey: string) {
   const configuration = storageConfiguration();
   if (!configuration) {
     if (serverEnvironment.NODE_ENV === "production") {
-      throw new Error("PRIVATE_RECEIPT_STORAGE_NOT_CONFIGURED");
+      await requiredReceiptDatabase().privateReceipt.deleteMany({
+        where: { objectKey },
+      });
+      return;
     }
     try {
       await unlink(localReceiptPath(objectKey));

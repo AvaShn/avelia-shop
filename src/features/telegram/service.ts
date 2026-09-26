@@ -7,7 +7,10 @@ import {
   sendTelegramMessage,
 } from "@/features/telegram/client";
 import type { TelegramUpdate } from "@/features/telegram/schemas";
-import { storePrivateReceipt } from "@/features/telegram/storage";
+import {
+  deletePrivateReceipt,
+  storePrivateReceipt,
+} from "@/features/telegram/storage";
 import {
   assertOrderTransition,
   assertPaymentTransition,
@@ -311,32 +314,39 @@ async function processReceipt(
   const receipt = await downloadTelegramPhoto(photo.file_id);
   const objectKey = await storePrivateReceipt(payment.orderId, receipt);
 
-  await prisma.$transaction(async (transaction) => {
-    const paymentUpdated = await transaction.payment.updateMany({
-      where: {
-        id: payment.id,
-        status: "PENDING",
-        providerUpdateId: null,
-      },
-      data: {
-        status: "UNDER_REVIEW",
-        telegramFileId: photo.file_id,
-        receiptObjectKey: objectKey,
-        providerUpdateId,
-      },
+  try {
+    await prisma.$transaction(async (transaction) => {
+      const paymentUpdated = await transaction.payment.updateMany({
+        where: {
+          id: payment.id,
+          status: "PENDING",
+          providerUpdateId: null,
+        },
+        data: {
+          status: "UNDER_REVIEW",
+          telegramFileId: photo.file_id,
+          receiptObjectKey: objectKey,
+          providerUpdateId,
+        },
+      });
+      const orderUpdated = await transaction.order.updateMany({
+        where: {
+          id: payment.orderId,
+          status: "PENDING_PAYMENT",
+          inventoryReleasedAt: null,
+        },
+        data: { status: "WAITING_REVIEW" },
+      });
+      if (paymentUpdated.count !== 1 || orderUpdated.count !== 1) {
+        throw new Error("CONCURRENT_RECEIPT_UPDATE");
+      }
     });
-    const orderUpdated = await transaction.order.updateMany({
-      where: {
-        id: payment.orderId,
-        status: "PENDING_PAYMENT",
-        inventoryReleasedAt: null,
-      },
-      data: { status: "WAITING_REVIEW" },
-    });
-    if (paymentUpdated.count !== 1 || orderUpdated.count !== 1) {
-      throw new Error("CONCURRENT_RECEIPT_UPDATE");
-    }
-  });
+  } catch (error: unknown) {
+    await deletePrivateReceipt(objectKey).catch((cleanupError: unknown) =>
+      console.error("Failed to remove an orphaned receipt.", cleanupError),
+    );
+    throw error;
+  }
 
   await sendTelegramMessage(
     chatId,
