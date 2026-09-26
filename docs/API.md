@@ -29,8 +29,10 @@ are never serialized directly.
 - `DELETE /api/auth/session`: revoke the current customer session.
 - `GET /api/account/orders`: authenticated cursor-paginated order history.
 - `POST /api/orders`: authenticated checkout from server-repriced cart
-  contents. A valid `Idempotency-Key` header plus recipient and complete
-  delivery-address data are required.
+  contents. A valid `Idempotency-Key` header plus recipient, complete
+  delivery-address data, and `shippingMethod` (`POST` or `TIPAX`) are required.
+  POST adds 1,500,000 Rials to the server-calculated total; TIPAX is recorded
+  with zero prepaid cost because its fee is collected at the door.
 - `GET /api/orders/[token]`: customer-safe order status with no internal IDs or
   customer details.
 - `POST /api/telegram/session`: create an expiring handoff from
@@ -47,10 +49,27 @@ are never serialized directly.
   cursor pagination.
 - `GET /api/admin/orders/[token]`: customer, line item, review, and receipt
   metadata.
+- `DELETE /api/admin/orders/[token]`: permanently deletes the order, line
+  items, payment, and stored receipt. An uncommitted inventory reservation is
+  returned to product stock in the same database transaction.
 - `GET /api/admin/orders/[token]/receipt`: authenticated private image proxy;
   no storage URL or object key is exposed.
 - `POST /api/admin/orders/[token]/payment`: `{ action: "APPROVE" | "REJECT",
 note? }` using the defined state transitions.
+- `GET /api/admin/products`: returns supported categories and the latest
+  products for the admin workspace.
+- `POST /api/admin/products`: validates and creates a product from explicit
+  fields, including Rial prices, optional discount price, image paths,
+  features, inventory, and publication flags. Storefront paths are revalidated
+  after creation.
+- `GET /api/admin/products/[id]`: returns all editable fields for one product,
+  including unpublished and legacy records.
+- `PATCH /api/admin/products/[id]`: validates and saves the complete product
+  form, checks slug uniqueness, and revalidates both the previous and current
+  storefront paths.
+- `DELETE /api/admin/products/[id]`: permanently deletes a product that has no
+  order history and removes its active cart lines. Products referenced by an
+  order are protected to preserve financial history; unpublish those instead.
 
 Generate the password hash before deployment:
 

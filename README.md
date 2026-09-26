@@ -134,5 +134,10 @@ history, public order tracking, and protected admin review APIs. API setup and c
 [`docs/API.md`](docs/API.md), and database details are documented in
 [`prisma/README.md`](prisma/README.md).
 
+The protected `/admin` workspace also provides a complete product-entry form
+and permanent order deletion. Product creation writes directly to PostgreSQL;
+pending inventory reservations are safely returned to stock before an order is
+deleted.
+
 Local polling and production webhook setup for the payment bot are documented
 in [`docs/TELEGRAM_SETUP.md`](docs/TELEGRAM_SETUP.md).
